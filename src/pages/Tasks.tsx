@@ -67,12 +67,21 @@ export default function Tasks() {
     setSelectedTask(null);
   };
 
+  /** 将 time 输入值 HH:mm 转为 "08:30 AM" 格式 */
+  const formatTimeDisplay = (hhmm: string): string => {
+    if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '—';
+    const [h, m] = hhmm.split(':').map(Number);
+    const h12 = h % 12 || 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
+
   const handleAdd = () => {
     const title = newTitle.trim();
     if (!title) return;
     addTask({
       title,
-      time: newTime.trim() || '—',
+      time: formatTimeDisplay(newTime) || '—',
       location: newLocation.trim() || '—',
       status: newStatus,
       iconType: newIconType,
@@ -121,13 +130,15 @@ export default function Tasks() {
                 placeholder="任务名称（必填）"
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
               />
-              <input
-                type="text"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                placeholder="时间，如 08:30 AM"
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
-              />
+              <div>
+                <label className="block text-slate-500 text-sm mb-1">时间</label>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                />
+              </div>
               <input
                 type="text"
                 value={newLocation}
