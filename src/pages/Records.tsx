@@ -115,17 +115,17 @@ export default function Records() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between pt-safe">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors">
-            <ChevronLeft className="w-6 h-6" />
+      <nav className="bg-white border-b border-slate-100 sticky top-0 z-40 pt-safe">
+        <div className="px-4 h-16 flex items-center justify-between relative">
+          <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+            <ChevronLeft className="w-6 h-6 text-slate-600" />
           </button>
-          <h1 className="text-lg font-bold">Ai病例</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">Ai 病例生成</h1>
+          <Link to="/drafts" className="text-blue-600 font-medium text-sm shrink-0 active:opacity-70">
+            草稿箱 ({draftCount})
+          </Link>
         </div>
-        <Link to="/drafts" className="text-blue-600 font-medium text-sm active:opacity-70">
-          草稿箱 ({draftCount})
-        </Link>
-      </header>
+      </nav>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-6 pb-10 no-scrollbar">
         {/* PatientSelectionSection */}

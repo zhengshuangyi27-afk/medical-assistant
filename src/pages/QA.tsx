@@ -107,31 +107,17 @@ export default function QA() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
-      <header className="bg-white border-b border-gray-100 pt-safe sticky top-0 z-40">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors">
-              <ChevronLeft className="h-6 w-6 text-gray-600" />
-            </button>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h1 className="text-sm font-bold text-gray-800 leading-tight">普通外科</h1>
-                <p className="text-[10px] text-green-500 flex items-center">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> Ai 助手在线
-                </p>
-              </div>
-            </div>
-          </div>
-          <button className="text-gray-400 hover:text-gray-600 p-1">
+      <nav className="bg-white border-b border-slate-100 sticky top-0 z-40 pt-safe">
+        <div className="px-4 h-16 flex items-center justify-between relative">
+          <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+            <ChevronLeft className="h-6 w-6 text-slate-600" />
+          </button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">Ai 科室问答</h1>
+          <button type="button" className="text-gray-400 hover:text-gray-600 p-1 shrink-0" aria-label="更多">
             <MoreHorizontal className="h-6 w-6" />
           </button>
         </div>
-      </header>
+      </nav>
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 no-scrollbar space-y-6">
         {messages.map((msg, index) => (

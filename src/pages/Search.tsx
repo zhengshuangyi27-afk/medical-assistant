@@ -163,17 +163,15 @@ export default function Search() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F5F7FA]">
-      <header className="bg-white sticky top-0 z-40 shadow-sm px-4 pt-safe pb-4">
-        <div className="flex items-center space-x-3 mb-4 mt-4">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors">
+      <nav className="bg-white border-b border-slate-100 sticky top-0 z-40 pt-safe">
+        <div className="px-4 h-16 flex items-center justify-between relative">
+          <button onClick={() => navigate(-1)} className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
             <ChevronLeft className="w-6 h-6 text-slate-600" />
           </button>
-          <div className="w-8 h-8 bg-[#0055BB] rounded-lg flex items-center justify-center shrink-0">
-            <SearchIcon className="h-5 w-5 text-white" strokeWidth={2.5} />
-          </div>
-          <h1 className="text-lg font-bold text-[#0055BB] tracking-tight">Ai 医疗指南</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">Ai 用药查询</h1>
+          <div className="w-10 h-10 shrink-0" aria-hidden />
         </div>
-        
+        <div className="px-4 pb-4">
         <div className="relative">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3">
             <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -199,7 +197,8 @@ export default function Search() {
             </button>
           )}
         </div>
-      </header>
+        </div>
+      </nav>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-10">
         {/* AI Search Results Section */}

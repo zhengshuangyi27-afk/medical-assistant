@@ -1,31 +1,35 @@
-import { Bell, Zap, FileText, FlaskConical, MessageSquare, ClipboardList, Clock, CheckCircle2, X } from 'lucide-react';
+import { Zap, FileText, FlaskConical, MessageSquare, ClipboardList, Clock, CheckCircle2, X } from 'lucide-react';
 import BottomNav from '@/src/components/ui/BottomNav';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
+import { getSelectedModelId } from '@/src/lib/llm';
+import { apiGet } from '@/src/lib/api';
+import type { Task, TaskStatus } from '@/src/lib/tasks';
+import { getTasks, updateTask } from '@/src/lib/tasks';
 
-type TaskStatus = 'in-progress' | 'pending' | 'completed' | 'cancelled';
-
-interface Task {
-  id: string;
-  title: string;
-  time: string;
-  location: string;
-  status: TaskStatus;
-  iconType: 'clipboard' | 'clock' | 'check';
-}
+/** 与 Profile 页一致的头像地址，保证首页头像即「我的」头像 */
+const PROFILE_AVATAR_URL = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbBfro0m89yk4rm-wyVevUSsEpExKZKWXqYjpMpH_R0ZxG1lHO1aX2l0XYLufxC1FXphv8vBL2wFzdX135gXIq3YJnXUbp1YFreLWYwJOb-boCUuGTBhM4bvaw-FppB2oymZBoU-VgO4p8P3Dlshr8IERUW-PSihMDSW7P9ydRyeKxfO2hOU9u51wrKq64JwtfnD_D7R03AAA7ljdtdTTWwLqb9jbXL6pELfp73ndNNp5hevXcfVMsK3yOfcY5rDZJbBFF77Ts-HY';
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '1', title: '晨间查房', time: '08:30 AM', location: '4楼', status: 'in-progress', iconType: 'clipboard' },
-    { id: '2', title: '手术准备', time: '11:00 AM', location: '2号手术室', status: 'pending', iconType: 'clock' },
-    { id: '3', title: '门诊接诊', time: '07:00 AM', location: '201诊室', status: 'completed', iconType: 'check' },
-  ]);
+  const [currentModelName, setCurrentModelName] = useState<string>('');
 
+  useEffect(() => {
+    const id = getSelectedModelId();
+    apiGet<{ models: { id: string; name: string }[] }>('/api/config/llm')
+      .then((data) => {
+        const name = data.models?.find((m) => m.id === id)?.name ?? id;
+        setCurrentModelName(name);
+      })
+      .catch(() => setCurrentModelName(id || '—'));
+  }, []);
+
+  const [tasks, setTasksState] = useState<Task[]>(() => getTasks());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const handleUpdateStatus = (id: string, newStatus: TaskStatus) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
+    updateTask(id, { status: newStatus });
+    setTasksState(getTasks());
     setSelectedTask(null);
   };
 
@@ -80,36 +84,20 @@ export default function Home() {
             <span className="font-bold text-xl tracking-tight text-blue-900">多模态Ai医护助手</span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button aria-label="通知" className="relative p-2 text-slate-500">
-              <Bell className="h-6 w-6" />
-              <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-            </button>
-            <img
-              alt="用户头像"
-              className="w-8 h-8 rounded-full border border-slate-200 object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1qTLZ9Lv-ihjhCI8QPhoRtam2DBIQE4ZESYQlFReF_UkGHg4PUP6DiIf0ppUPCiVjvhJe54sVWpvWnSej7ePoXNfZd_FYKbwHk4rsixsPTHsLVqi7aPT8-onZGHMKx_xTYBjJZaObwlJxQcMLDjWXTF8Yo_R9CiNOonHl-KeFP1AzrnknRJ9PxQZQZ7xRd6B7C1uVxP708UBpxKW3zI-D7nbak6KXcOYLgfiQTJ1V3PH1vNB25Lamztm3jXn0GTdX4oOfYYiRAKE"
-            />
+          <div className="flex items-center">
+            <Link to="/profile" className="block rounded-full border border-slate-200 overflow-hidden">
+              <img
+                alt="用户头像"
+                className="w-8 h-8 rounded-full object-cover"
+                src={PROFILE_AVATAR_URL}
+              />
+            </Link>
           </div>
         </div>
       </nav>
 
       {/* MainContent */}
       <main className="flex-1 px-4 py-6 space-y-6 overflow-y-auto pb-24 no-scrollbar">
-        {/* NotificationBanner */}
-        <section className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-start gap-4">
-          <div className="mt-1 bg-blue-500 p-1.5 rounded-lg shrink-0">
-            <div className="h-5 w-5 text-white flex items-center justify-center font-bold text-sm">i</div>
-          </div>
-          <div className="flex-1">
-            <h4 className="font-semibold text-blue-900 text-base">新紧急消息</h4>
-            <p className="text-blue-700 text-sm mt-1 leading-relaxed">患者 #1024 的检验结果已出，请尽快审阅并采取行动。</p>
-          </div>
-          <button className="text-blue-400 hover:text-blue-600 shrink-0">
-            <X className="h-5 w-5" />
-          </button>
-        </section>
-
         {/* QuickAccessGrid */}
         <section>
           <h3 className="text-slate-900 font-bold text-lg mb-4">快捷访问</h3>
@@ -141,7 +129,7 @@ export default function Home() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-slate-900 font-bold text-lg">今日任务</h3>
-            <button className="text-blue-600 text-sm font-semibold">查看全部</button>
+            <Link to="/tasks" className="text-blue-600 text-sm font-semibold">查看全部</Link>
           </div>
           <div className="space-y-3">
             {tasks.map(task => (
@@ -172,6 +160,15 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      {/* 当前模型显示：导航栏上方 */}
+      {currentModelName && (
+        <div className="fixed bottom-16 left-0 right-0 z-40 max-w-md mx-auto px-4 pb-1">
+          <div className="bg-slate-100/95 backdrop-blur text-slate-600 text-xs py-2 px-3 rounded-lg text-center">
+            当前模型：{currentModelName}
+          </div>
+        </div>
+      )}
 
       <BottomNav />
 

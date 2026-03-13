@@ -12,6 +12,7 @@ import Search from './pages/Search';
 import QA from './pages/QA';
 import Profile from './pages/Profile';
 import Calculator from './pages/Calculator';
+import Tasks from './pages/Tasks';
 import { migrateToDashScopeDefault } from './lib/llm';
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/qa" element={<QA />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/tasks" element={<Tasks />} />
           <Route path="/calculator" element={<Calculator />} />
         </Routes>
       </div>
