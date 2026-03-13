@@ -1,0 +1,56 @@
+<view class="container">
+  <view class="tabs">
+    <view class="tab {{tab === 'bmi' ? 'active' : ''}}" data-tab="bmi" bindtap="switchTab">BMI/BSA</view>
+    <view class="tab {{tab === 'crcl' ? 'active' : ''}}" data-tab="crcl" bindtap="switchTab">肌酐清除率</view>
+  </view>
+
+  <block wx:if="{{tab === 'bmi'}}">
+    <view class="card">
+      <view class="field">
+        <text class="label">身高 (cm)</text>
+        <input type="digit" placeholder="175" value="{{height}}" bindinput="onHeight"/>
+      </view>
+      <view class="field">
+        <text class="label">体重 (kg)</text>
+        <input type="digit" placeholder="70" value="{{weight}}" bindinput="onWeight"/>
+      </view>
+    </view>
+    <view wx:if="{{bmi > 0}}" class="card result">
+      <text class="result-label">BMI</text>
+      <text class="result-value">{{bmi}}</text>
+      <text class="result-unit">kg/m²  {{bmiStatus}}</text>
+      <text class="result-label">BSA (Mosteller)</text>
+      <text class="result-value">{{bsa}}</text>
+      <text class="result-unit">m²</text>
+    </view>
+  </block>
+
+  <block wx:if="{{tab === 'crcl'}}">
+    <view class="card">
+      <view class="field">
+        <text class="label">性别</text>
+        <view class="gender">
+          <view class="gender-btn {{gender === 'M' ? 'active' : ''}}" data-g="M" bindtap="onGender">男</view>
+          <view class="gender-btn {{gender === 'F' ? 'active' : ''}}" data-g="F" bindtap="onGender">女</view>
+        </view>
+      </view>
+      <view class="field">
+        <text class="label">年龄 (岁)</text>
+        <input type="digit" placeholder="65" value="{{age}}" bindinput="onAge"/>
+      </view>
+      <view class="field">
+        <text class="label">体重 (kg)</text>
+        <input type="digit" placeholder="70" value="{{crWeight}}" bindinput="onCrWeight"/>
+      </view>
+      <view class="field">
+        <text class="label">血清肌酐 (μmol/L)</text>
+        <input type="digit" placeholder="90" value="{{creatinine}}" bindinput="onCreatinine"/>
+      </view>
+    </view>
+    <view wx:if="{{crcl > 0}}" class="card result">
+      <text class="result-label">肌酐清除率 (Cockcroft-Gault)</text>
+      <text class="result-value">{{crcl}}</text>
+      <text class="result-unit">mL/min</text>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/records/records",
+    "pages/search/search",
+    "pages/qa/qa",
+    "pages/profile/profile",
+    "pages/calculator/calculator"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0055BB",
+    "navigationBarTitleText": "AI助手医护版",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json"
+}

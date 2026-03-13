@@ -1,0 +1,5 @@
+{
+  "name": "医疗助手 (Medical Assistant)",
+  "description": "A mobile-first medical assistant application featuring patient records, AI guidelines, and department Q&A.",
+  "requestFramePermissions": []
+}

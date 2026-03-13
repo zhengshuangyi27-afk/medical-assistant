@@ -1,0 +1,89 @@
+<view class="container">
+  <view class="card">
+    <view class="section-title row">
+      <text>患者信息</text>
+      <view class="link" bindtap="openPatientModal">选择患者 ></view>
+    </view>
+    <view class="patient-card">
+      <view class="patient-avatar">{{selectedPatient.initial}}</view>
+      <view class="patient-info">
+        <view class="patient-name">{{selectedPatient.name}} <text class="tag">{{selectedPatient.gender}}, {{selectedPatient.age}}岁</text></view>
+        <text class="patient-meta">ID: {{selectedPatient.patientId}} | 病房: {{selectedPatient.room}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">病情描述</view>
+    <view class="input-wrap">
+      <textarea
+        class="textarea"
+        placeholder="请描述患者情况，或点击下方麦克风使用微信语音输入..."
+        value="{{inputText}}"
+        bindinput="onInput"
+      />
+      <view
+        class="mic-btn {{isRecording ? 'recording' : ''}}"
+        bindtap="onVoiceTap"
+      >
+        <text>{{isRecording ? '停止' : '语音'}}</text>
+      </view>
+    </view>
+    <button
+      class="btn-primary"
+      disabled="{{isGenerating}}"
+      bindtap="onGenerate"
+    >
+      {{isGenerating ? 'AI 生成中...' : 'AI 生成标准病历'}}
+    </button>
+  </view>
+
+  <view wx:if="{{record}}" class="card result-card">
+    <view class="section-title">标准病历预览</view>
+    <view class="field">
+      <text class="field-label">主诉：</text>
+      <text class="field-value">{{record.chiefComplaint}}</text>
+    </view>
+    <view class="field">
+      <text class="field-label">护理评估：</text>
+      <text class="field-value">{{record.assessment}}</text>
+    </view>
+    <view class="field">
+      <text class="field-label">诊疗计划：</text>
+      <text class="field-value">{{record.plan}}</text>
+    </view>
+    <view class="actions">
+      <button class="btn-secondary" bindtap="onSave">保存至本地</button>
+      <button class="btn-green" bindtap="onSyncHis">同步至 HIS</button>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{patientModalOpen}}" bindtap="closePatientModal">
+    <view class="modal-panel" catchtap="">
+      <view class="modal-title">选择患者</view>
+      <scroll-view scroll-y class="modal-list">
+        <view
+          wx:for="{{patients}}"
+          wx:key="id"
+          class="modal-item {{selectedPatientIndex === index ? 'active' : ''}}"
+          data-index="{{index}}"
+          bindtap="onSelectPatient"
+        >
+          <view class="patient-avatar small">{{item.initial}}</view>
+          <view class="modal-item-info">
+            <text class="modal-item-name">{{item.name}}</text>
+            <text class="modal-item-meta">{{item.gender}}, {{item.age}}岁 · ID: {{item.patientId}} · {{item.room}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/index/index" class="nav-item">首页</navigator>
+    <navigator url="/pages/records/records" class="nav-item nav-active">病历</navigator>
+    <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item">问答</navigator>
+    <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
+  </view>
+</view>

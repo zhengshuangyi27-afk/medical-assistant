@@ -1,0 +1,27 @@
+<view class="container">
+  <view class="card">
+    <view class="quick-title">快捷访问</view>
+    <view class="grid">
+      <navigator url="/pages/records/records" class="grid-item">
+        <text class="grid-label">生成病历</text>
+      </navigator>
+      <navigator url="/pages/search/search" class="grid-item">
+        <text class="grid-label">用药查询</text>
+      </navigator>
+      <navigator url="/pages/qa/qa" class="grid-item">
+        <text class="grid-label">科室问答</text>
+      </navigator>
+    </view>
+  </view>
+  <view class="card">
+    <view class="quick-title">今日任务</view>
+    <text class="placeholder">任务列表（可从后端拉取）</text>
+  </view>
+  <view class="bottom-nav">
+    <navigator url="/pages/index/index" class="nav-item">首页</navigator>
+    <navigator url="/pages/records/records" class="nav-item">病历</navigator>
+    <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item">问答</navigator>
+    <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
+  </view>
+</view>

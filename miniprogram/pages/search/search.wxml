@@ -1,0 +1,33 @@
+<view class="container">
+  <view class="card">
+    <view class="search-box">
+      <input
+        class="search-input"
+        placeholder="搜索药物、症状或指南..."
+        value="{{query}}"
+        bindinput="onInput"
+        bindconfirm="onSearch"
+      />
+      <button class="search-btn" bindtap="onSearch" disabled="{{loading}}">
+        {{loading ? '搜索中...' : '搜索'}}
+      </button>
+    </view>
+  </view>
+
+  <view wx:if="{{result}}" class="card result-box">
+    <view class="result-title">AI 回答</view>
+    <text class="result-text">{{result}}</text>
+  </view>
+
+  <view class="card" bindtap="goCalculator">
+    <text class="link">医学计算器</text>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/index/index" class="nav-item">首页</navigator>
+    <navigator url="/pages/records/records" class="nav-item">病历</navigator>
+    <navigator url="/pages/search/search" class="nav-item nav-active nav-center">搜索</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item">问答</navigator>
+    <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
+  </view>
+</view>

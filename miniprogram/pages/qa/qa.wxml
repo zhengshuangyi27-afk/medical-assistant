@@ -1,0 +1,47 @@
+<view class="container">
+  <scroll-view scroll-y class="msg-list" scroll-into-view="{{'msg-' + (messages.length - 1)}}">
+    <view
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="msg-{{index}}"
+      class="msg-row {{item.role}}"
+    >
+      <view class="bubble">{{item.content}}</view>
+    </view>
+    <view wx:if="{{loading}}" class="msg-row ai">
+      <view class="bubble">正在思考...</view>
+    </view>
+  </scroll-view>
+
+  <view class="suggestions">
+    <view
+      wx:for="{{['手术准备','化验流程','术后护理']}}"
+      wx:key="*this"
+      class="chip"
+      data-text="{{item}}"
+      bindtap="onSuggestionTap"
+    >
+      {{item}}
+    </view>
+  </view>
+
+  <view class="input-bar">
+    <input
+      class="input"
+      placeholder="输入问题..."
+      value="{{inputValue}}"
+      bindinput="onInput"
+      confirm-type="send"
+      bindconfirm="onSend"
+    />
+    <button class="send-btn" bindtap="onSend" disabled="{{loading}}">发送</button>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/index/index" class="nav-item">首页</navigator>
+    <navigator url="/pages/records/records" class="nav-item">病历</navigator>
+    <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item nav-active">问答</navigator>
+    <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
+  </view>
+</view>

@@ -1,0 +1,37 @@
+<view class="container">
+  <view class="card">
+    <view class="row" bindtap="onSelectModel">
+      <text class="row-title">当前启用模型</text>
+      <text class="row-value">{{selectedName || '未选择'}}</text>
+      <text class="arrow">></text>
+    </view>
+  </view>
+  <view class="card">
+    <text class="hint">HIS / EMR 配置可在后端扩展</text>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/index/index" class="nav-item">首页</navigator>
+    <navigator url="/pages/records/records" class="nav-item">病历</navigator>
+    <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item">问答</navigator>
+    <navigator url="/pages/profile/profile" class="nav-item nav-active">我的</navigator>
+  </view>
+</view>
+
+<view class="modal-mask" wx:if="{{showModal}}" bindtap="closeModal">
+  <view class="modal" catchtap="">
+    <view class="modal-title">选择 AI 大模型</view>
+    <view
+      wx:for="{{models}}"
+      wx:key="id"
+      class="modal-item {{selectedModel === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      data-name="{{item.name}}"
+      bindtap="onChooseModel"
+    >
+      <text class="modal-item-name">{{item.name}}</text>
+      <text class="modal-item-desc">{{item.description}}</text>
+    </view>
+  </view>
+</view>
