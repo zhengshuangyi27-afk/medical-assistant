@@ -171,7 +171,7 @@ export default function Search() {
           <div className="w-8 h-8 bg-[#0055BB] rounded-lg flex items-center justify-center shrink-0">
             <SearchIcon className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
-          <h1 className="text-lg font-bold text-[#0055BB] tracking-tight">AI 医疗指南</h1>
+          <h1 className="text-lg font-bold text-[#0055BB] tracking-tight">Ai 医疗指南</h1>
         </div>
         
         <div className="relative">
@@ -207,7 +207,7 @@ export default function Search() {
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <span className="bg-blue-100 text-[#0055BB] text-xs font-bold px-2 py-0.5 rounded">AI 回答</span>
+                <span className="bg-blue-100 text-[#0055BB] text-xs font-bold px-2 py-0.5 rounded">Ai 回答</span>
                 <h2 className="text-base font-bold text-gray-800 line-clamp-1">{query}</h2>
               </div>
               <div className="flex space-x-4">
@@ -397,7 +397,7 @@ export default function Search() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <span className="bg-blue-100 text-[#0055BB] text-xs font-bold px-2 py-0.5 rounded">AI 洞察示例</span>
+                <span className="bg-blue-100 text-[#0055BB] text-xs font-bold px-2 py-0.5 rounded">Ai 洞察示例</span>
                 <h2 className="text-base font-bold text-gray-800">二甲双胍 (Metformin)</h2>
               </div>
               <div className="flex space-x-4">

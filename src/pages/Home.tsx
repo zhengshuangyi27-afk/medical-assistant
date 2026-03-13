@@ -77,7 +77,7 @@ export default function Home() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Zap className="h-5 w-5 text-white fill-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-blue-900">AI助手医护版</span>
+            <span className="font-bold text-xl tracking-tight text-blue-900">多模态Ai医护助手</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -118,21 +118,21 @@ export default function Home() {
               <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-2 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <FileText className="h-6 w-6" />
               </div>
-              <span className="text-sm font-semibold text-slate-700 leading-tight">生成<br />病历</span>
+              <span className="text-sm font-semibold text-slate-700 leading-tight">Ai<br />病例生成</span>
             </Link>
             
             <Link to="/search" className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center group active:scale-95 transition-transform">
               <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center mb-2 group-hover:bg-teal-600 group-hover:text-white transition-colors">
                 <FlaskConical className="h-6 w-6" />
               </div>
-              <span className="text-sm font-semibold text-slate-700 leading-tight">用药<br />查询</span>
+              <span className="text-sm font-semibold text-slate-700 leading-tight">Ai<br />用药查询</span>
             </Link>
             
             <Link to="/qa" className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center group active:scale-95 transition-transform">
               <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-2 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <MessageSquare className="h-6 w-6" />
               </div>
-              <span className="text-sm font-semibold text-slate-700 leading-tight">科室<br />问答</span>
+              <span className="text-sm font-semibold text-slate-700 leading-tight">Ai<br />科室问答</span>
             </Link>
           </div>
         </section>

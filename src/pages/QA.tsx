@@ -122,7 +122,7 @@ export default function QA() {
               <div className="ml-3">
                 <h1 className="text-sm font-bold text-gray-800 leading-tight">普通外科</h1>
                 <p className="text-[10px] text-green-500 flex items-center">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> AI 助手在线
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> Ai 助手在线
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function QA() {
             ) : (
               <div className="flex items-start space-x-2 max-w-[90%]">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center mt-1">
-                  <span className="text-xs font-bold text-blue-600">AI</span>
+                  <span className="text-xs font-bold text-blue-600">Ai</span>
                 </div>
                 <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-4 py-4 shadow-sm">
                   {msg.content}
@@ -161,7 +161,7 @@ export default function QA() {
           <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-start space-x-2 max-w-[90%]">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center mt-1">
-                <span className="text-xs font-bold text-blue-600">AI</span>
+                <span className="text-xs font-bold text-blue-600">Ai</span>
               </div>
               <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-4 py-4 shadow-sm flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-600" />

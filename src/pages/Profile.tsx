@@ -79,7 +79,7 @@ export default function Profile() {
 
         {/* LLM Configuration Section */}
         <section className="mb-3">
-          <h2 className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">AI 大模型配置</h2>
+          <h2 className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ai 大模型配置</h2>
           <div className="bg-white border-y border-gray-100">
             <div 
               onClick={() => setIsModelModalOpen(true)}
@@ -197,7 +197,7 @@ export default function Profile() {
         <div className="absolute inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full rounded-t-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-full duration-300 pb-safe">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800 text-lg">选择 AI 大模型</h3>
+              <h3 className="font-bold text-slate-800 text-lg">选择 Ai 大模型</h3>
               <button onClick={() => setIsModelModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
                 <X className="w-5 h-5" />
               </button>

@@ -10,7 +10,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#0055BB",
-    "navigationBarTitleText": "AI助手医护版",
+    "navigationBarTitleText": "多模态Ai医护助手",
     "navigationBarTextStyle": "white"
   },
   "sitemapLocation": "sitemap.json"

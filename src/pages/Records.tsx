@@ -120,7 +120,7 @@ export default function Records() {
           <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors">
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-bold">生成病历</h1>
+          <h1 className="text-lg font-bold">Ai病例</h1>
         </div>
         <Link to="/drafts" className="text-blue-600 font-medium text-sm active:opacity-70">
           草稿箱 ({draftCount})
@@ -257,12 +257,12 @@ export default function Records() {
             {isGenerating ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                AI 生成中...
+                Ai 生成中...
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                AI 生成标准病历
+                Ai 生成标准病历
               </>
             )}
           </button>

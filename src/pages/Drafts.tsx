@@ -40,7 +40,7 @@ export default function Drafts() {
           <div className="text-center py-12 text-slate-500 text-sm">
             <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p>暂无草稿</p>
-            <p className="mt-1">在「生成病历」页生成并保存后，会出现在这里</p>
+            <p className="mt-1">在「Ai病例」页生成并保存后，会出现在这里</p>
           </div>
         ) : (
           <ul className="space-y-3">

@@ -3,13 +3,13 @@
     <view class="quick-title">快捷访问</view>
     <view class="grid">
       <navigator url="/pages/records/records" class="grid-item">
-        <text class="grid-label">生成病历</text>
+        <text class="grid-label">Ai病例生成</text>
       </navigator>
       <navigator url="/pages/search/search" class="grid-item">
-        <text class="grid-label">用药查询</text>
+        <text class="grid-label">Ai用药查询</text>
       </navigator>
       <navigator url="/pages/qa/qa" class="grid-item">
-        <text class="grid-label">科室问答</text>
+        <text class="grid-label">Ai科室问答</text>
       </navigator>
     </view>
   </view>

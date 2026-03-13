@@ -34,7 +34,7 @@
       disabled="{{isGenerating}}"
       bindtap="onGenerate"
     >
-      {{isGenerating ? 'AI 生成中...' : 'AI 生成标准病历'}}
+      {{isGenerating ? 'Ai 生成中...' : 'Ai 生成标准病历'}}
     </button>
   </view>
 

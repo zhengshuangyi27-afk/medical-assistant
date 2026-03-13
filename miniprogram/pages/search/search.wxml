@@ -15,7 +15,7 @@
   </view>
 
   <view wx:if="{{result}}" class="card result-box">
-    <view class="result-title">AI 回答</view>
+    <view class="result-title">Ai 回答</view>
     <text class="result-text">{{result}}</text>
   </view>
 
