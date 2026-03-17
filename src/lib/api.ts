@@ -23,16 +23,37 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 const networkErrorMsg = '无法连接后端，请确认已运行 npm run server（端口 3001）';
 
-export async function apiPost<T = unknown>(path: string, body: object): Promise<T> {
+/** LLM 类接口可等待较长时间；其他接口用较短超时 */
+const LLM_TIMEOUT_MS = 90_000;
+const DEFAULT_TIMEOUT_MS = 25_000;
+
+function fetchWithTimeout(
+  url: string,
+  init: RequestInit & { timeoutMs?: number }
+): Promise<Response> {
+  const timeoutMs = init.timeoutMs ?? (url.includes('/api/llm') || url.includes('/api/records/generate') ? LLM_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const signal = controller.signal;
+  const { timeoutMs: _t, ...fetchInit } = init;
+  return fetch(url, { ...fetchInit, signal }).finally(() => clearTimeout(timeoutId));
+}
+
+export async function apiPost<T = unknown>(path: string, body: object, options?: { timeoutMs?: number }): Promise<T> {
   try {
     const url = apiUrl(path);
-    const res = await fetch(url, {
+    const timeoutMs = options?.timeoutMs ?? (path.includes('/api/llm') || path.includes('/api/records/generate') ? LLM_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+      timeoutMs,
+    } as RequestInit & { timeoutMs?: number });
     return handleResponse(res) as Promise<T>;
   } catch (e) {
+    if ((e as Error).name === 'AbortError') {
+      throw new Error('请求超时，请稍后重试');
+    }
     if (e instanceof TypeError && (e.message === 'fetch failed' || e.message.includes('Failed to fetch'))) {
       throw new Error(networkErrorMsg);
     }
@@ -40,13 +61,17 @@ export async function apiPost<T = unknown>(path: string, body: object): Promise<
   }
 }
 
-export async function apiGet<T = unknown>(path: string, params?: Record<string, string>): Promise<T> {
+export async function apiGet<T = unknown>(path: string, params?: Record<string, string>, options?: { timeoutMs?: number }): Promise<T> {
   try {
     const url = new URL(apiUrl(path), typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
     if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const res = await fetch(url.toString());
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const res = await fetchWithTimeout(url.toString(), { timeoutMs });
     return handleResponse(res) as Promise<T>;
   } catch (e) {
+    if ((e as Error).name === 'AbortError') {
+      throw new Error('请求超时，请稍后重试');
+    }
     if (e instanceof TypeError && (e.message === 'fetch failed' || e.message.includes('Failed to fetch'))) {
       throw new Error(networkErrorMsg);
     }

@@ -10,17 +10,27 @@ const DEFAULT_LLM_CONFIGS: LlmConfigRow[] = [
   { id: 'gpt-4o-mini', provider: 'openai', model_id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'OpenAI 轻量模型', is_default: false, sort_order: 5 },
 ];
 
+/** 内存缓存：减少每次 /chat、/query 都查库 */
+let configCache: { list: LlmConfigRow[]; at: number } | null = null;
+const CONFIG_CACHE_TTL_MS = 60_000;
+
 export async function listLlmConfigs(): Promise<LlmConfigRow[]> {
+  const now = Date.now();
+  if (configCache && now - configCache.at < CONFIG_CACHE_TTL_MS) {
+    return configCache.list;
+  }
   if (supabase) {
     const { data, error } = await supabase
       .from('llm_configs')
       .select('id, provider, model_id, name, description, is_default, sort_order')
       .order('sort_order', { ascending: true });
     if (!error && data?.length) {
-      return data as LlmConfigRow[];
+      configCache = { list: data as LlmConfigRow[], at: now };
+      return configCache.list;
     }
   }
-  return DEFAULT_LLM_CONFIGS;
+  configCache = { list: [...DEFAULT_LLM_CONFIGS], at: now };
+  return configCache.list;
 }
 
 export async function getLlmConfigById(id: string): Promise<LlmConfigRow | null> {

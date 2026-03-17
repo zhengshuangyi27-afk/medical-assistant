@@ -10,6 +10,18 @@ const geminiClient = process.env.GEMINI_API_KEY
 
 const DASHSCOPE_BASE_URL = process.env.DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
+/** LLM 请求超时（毫秒），避免长时间无响应 */
+const LLM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 90_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} 请求超时（${ms / 1000}秒），请稍后重试`)), ms)
+    ),
+  ]);
+}
+
 async function chatWithGemini(modelId: string, messages: { role: string; content: string }[]): Promise<string> {
   if (!geminiClient) throw new Error('GEMINI_API_KEY not configured');
   const last = messages[messages.length - 1];
@@ -17,10 +29,14 @@ async function chatWithGemini(modelId: string, messages: { role: string; content
     .filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
     .join('\n\n') + (last?.role === 'user' ? '' : '');
-  const response = await geminiClient.models.generateContent({
-    model: modelId,
-    contents: prompt || 'Hello',
-  });
+  const response = await withTimeout(
+    geminiClient.models.generateContent({
+      model: modelId,
+      contents: prompt || 'Hello',
+    }),
+    LLM_TIMEOUT_MS,
+    'Gemini'
+  );
   return response.text ?? '';
 }
 
@@ -38,6 +54,8 @@ async function chatWithOpenAICompatible(
       content: m.content,
     })),
   };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(url, {
@@ -47,11 +65,17 @@ async function chatWithOpenAICompatible(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch (e) {
+    clearTimeout(timeoutId);
+    if ((e as Error).name === 'AbortError') {
+      throw new Error(`请求超时（${LLM_TIMEOUT_MS / 1000}秒），请稍后重试`);
+    }
     const msg = e instanceof Error ? e.message : String(e);
     throw new Error(`fetch failed: ${msg}. 若需代理请在 .env 配置 PROXY 或 HTTPS_PROXY 后重启。`);
   }
+  clearTimeout(timeoutId);
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`API ${res.status}: ${err}`);
