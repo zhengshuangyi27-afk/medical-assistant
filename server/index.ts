@@ -12,11 +12,18 @@ if (proxyUrl) {
   if (!process.env.HTTP_PROXY) process.env.HTTP_PROXY = proxyUrl;
   if (!process.env.HTTPS_PROXY) process.env.HTTPS_PROXY = proxyUrl;
   try {
-    const { setGlobalDispatcher, ProxyAgent } = await import('undici');
-    setGlobalDispatcher(new ProxyAgent(proxyUrl));
-    console.log('Proxy enabled:', proxyUrl.replace(/:[^:@]+@/, ':****@'));
-  } catch (e) {
-    console.warn('Proxy config found but undici not available, skipping:', (e as Error).message);
+    const m = (await import('node:undici')) as {
+      setGlobalDispatcher: (d: unknown) => void;
+      ProxyAgent: new (url: string) => unknown;
+    };
+    if (m.setGlobalDispatcher && m.ProxyAgent) {
+      m.setGlobalDispatcher(new m.ProxyAgent(proxyUrl));
+      console.log('Proxy enabled:', proxyUrl.replace(/:[^:@]+@/, ':****@'));
+    }
+  } catch {
+    console.warn(
+      'Proxy: 已设置 HTTP_PROXY/HTTPS_PROXY；全局 fetch 代理需 Node 20.10+（内置 undici）。当前可依赖各 SDK 是否读取环境变量代理。'
+    );
   }
 }
 

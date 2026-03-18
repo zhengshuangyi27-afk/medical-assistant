@@ -4,20 +4,11 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
 import { getSelectedModelId, getModelIdForModule, LLM_MODULES } from '@/src/lib/llm';
-import { apiGet, publicAssetUrl } from '@/src/lib/api';
-import { getCachedUser } from '@/src/lib/auth';
+import { apiGet } from '@/src/lib/api';
 import type { Task, TaskStatus } from '@/src/lib/tasks';
 import { getTasks, updateTask } from '@/src/lib/tasks';
 
-/** 与 Profile 页一致的头像地址，保证首页头像即「我的」头像 */
-const PROFILE_AVATAR_URL = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbBfro0m89yk4rm-wyVevUSsEpExKZKWXqYjpMpH_R0ZxG1lHO1aX2l0XYLufxC1FXphv8vBL2wFzdX135gXIq3YJnXUbp1YFreLWYwJOb-boCUuGTBhM4bvaw-FppB2oymZBoU-VgO4p8P3Dlshr8IERUW-PSihMDSW7P9ydRyeKxfO2hOU9u51wrKq64JwtfnD_D7R03AAA7ljdtdTTWwLqb9jbXL6pELfp73ndNNp5hevXcfVMsK3yOfcY5rDZJbBFF77Ts-HY';
-
 export default function Home() {
-  const user = getCachedUser();
-  const headerAvatarSrc = user?.avatarUrl
-    ? `${publicAssetUrl(user.avatarUrl)}?v=${user.avatarRev ?? 0}`
-    : PROFILE_AVATAR_URL;
-
   const [currentModelName, setCurrentModelName] = useState<string>('');
 
   useEffect(() => {
@@ -98,15 +89,7 @@ export default function Home() {
             <span className="font-bold text-xl tracking-tight text-blue-900">多模态医生助手</span>
           </div>
 
-          <div className="flex items-center">
-            <Link to="/profile" className="block rounded-full border border-slate-200 overflow-hidden bg-slate-100">
-              <img
-                alt="用户头像"
-                className="w-8 h-8 rounded-full object-cover"
-                src={headerAvatarSrc}
-              />
-            </Link>
-          </div>
+          <div className="w-[72px]" aria-hidden />
         </div>
       </nav>
 

@@ -37,8 +37,12 @@ async function handleResponse<T>(res: Response): Promise<T> {
     data = (await res.json().catch(() => ({}))) as typeof data;
   } else {
     const text = (await res.text().catch(() => '')).trim();
-    if (text && text.length < 300) {
+    if (text && text.length < 500) {
       data = { error: text === 'Not Found' ? '' : text };
+    }
+    if (res.status === 404 && /NOT_FOUND|could not be found|The page could not be found/i.test(text.slice(0, 800))) {
+      data.error =
+        'Vercel 上只有前端页面，没有 /api 接口。请在 Vercel 环境变量设置 VITE_API_URL 为你的后端地址（如 Railway/Render 部署的 Express，含 https://），重新部署前端；后端需单独部署并配置 CORS。';
     }
   }
   if (!res.ok) {
@@ -46,7 +50,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     if (!msg) {
       if (res.status === 404) {
         msg =
-          '未找到接口。请确认：1）已在本机运行 npm run server；2）前端使用 npm run dev（不要用仅静态预览访问），或设置 VITE_API_URL 指向后端地址';
+          '未找到接口。开发时请运行 npm run server 并用 npm run dev；部署到 Vercel 时必须在构建环境变量中设置 VITE_API_URL 指向已部署的 API 域名';
       } else {
         msg = res.statusText || `请求失败（${res.status}）`;
       }
