@@ -35,7 +35,7 @@
 
 ## 三、配置启动命令（很重要）
 
-仓库根目录已有 **`railway.toml`**，里面写了 **`startCommand = "npm start"`**，多数情况下 Railway 会直接按此启动，无需再改。
+仓库根目录已有 **`railway.toml`**（`builder = "NIXPACKS"` + **`tsx server/index.ts`** 启动），多数情况下 Railway 会直接按此构建与启动。
 
 若界面里仍显示别的启动方式，请手动改：
 
@@ -63,6 +63,33 @@
 | `OPENAI_API_KEY` | 用 OpenAI 时填 |
 
 **不要** 手动添加 `PORT`：Railway 会 **自动注入**，Express 已使用 `process.env.PORT`。
+
+### 4.1 在 Railway 里加「LLM」相关配置（两种情形）
+
+**情形 A — 让对话 / 病历等功能真正能用大模型（必做其一）**
+
+1. 进入服务 → **Variables** → **New Variable**。  
+2. 按你实际用的服务商 **只加需要的 Key**（名称必须完全一致）：
+
+| 你用哪家 | 变量名 | 值从哪来 |
+|----------|--------|----------|
+| 阿里云通义 | `DASHSCOPE_API_KEY` | 阿里云 DashScope 控制台 API Key |
+| Google Gemini | `GEMINI_API_KEY` | Google AI Studio |
+| OpenAI | `OPENAI_API_KEY` | OpenAI API Keys |
+
+3. 保存后等待自动重新部署；Supabase 里 **`llm_configs` 表** 也要有你选的模型（执行过本仓库 **`supabase/schema.sql`** 一般已有默认行）。
+
+**情形 B — 构建报错 `secret LLM: not found`，平台要求一条叫 `LLM` 的 Secret**
+
+本程序 **运行时读的是上面的 Key**，**不读** 名为 `LLM` 的变量；但若 Railway 构建阶段强制要 **Secret 名 `LLM`**，可以 **额外** 加一条变量过构建：
+
+1. **Variables** → **New Variable**。  
+2. **Variable Name**：填 **`LLM`**（必须同名）。  
+3. **Value**：填 **任意足够长的随机字符串**（例如 32 位以上），或与你主用的 Key 相同亦可——**仅用于满足构建注入**；对话功能仍由 **`DASHSCOPE_API_KEY` 等** 决定。  
+4. 若界面有 **「在构建时可用」/ Build** 相关选项且报错针对 Build Secret，按 Railway 提示把该变量标为 **Secret** 或加入 **Build** 作用域。  
+5. 保存后 **Redeploy**。
+
+> 更干净的做法仍是：**删掉** 误配的、在构建里引用 `LLM` 的配置（见下文常见问题）；只有删不掉、构建仍要 `LLM` 时再用情形 B。
 
 可选：
 
@@ -119,6 +146,7 @@ https://你的域名/health
 | `tsx: not found` | 拉最新代码后 Redeploy。 |
 | 登录 404 | 前端 **`VITE_API_URL`** 指向 Railway 域名并 Redeploy Vercel。 |
 | 免费额度 / 休眠 | 首次访问慢属正常。 |
+| **`failed to solve: secret LLM: not found`**（构建阶段） | 本仓库 **没有** 名为 `LLM` 的 Docker 构建密钥；大模型用的是运行时变量 **`DASHSCOPE_API_KEY` / `GEMINI_API_KEY` / `OPENAI_API_KEY`** 等。该报错表示 **Railway 构建** 在拉取某个 **Build Secret**，名字被设成了 **`LLM`**，但平台里 **没有** 这条 Secret。处理：**Variables** 里删掉任何 **Build** 阶段、引用 **`LLM`** 或 **`secrets.LLM`** 的项；或到 **Project / Service → 与 Secrets 相关的设置** 里去掉对 `LLM` 的引用。**不要**为了过构建随便造一个无意义的 `LLM` Secret——应删掉误配。若界面强制使用 **Railpack** 且仍报错，在服务 **Settings → Build** 中尽量选与本仓库一致的构建器（或联系 Railway：构建不应要求本项目中不存在的 Secret）。 |
 
 ---
 

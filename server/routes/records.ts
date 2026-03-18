@@ -5,6 +5,14 @@ import { createRecord, listRecords } from '../lib/records-db.js';
 
 const router = Router();
 
+/** 浏览器直接打开 URL 会是 GET，避免落到全局 /api 404 的误导文案 */
+router.get('/generate', (_req, res) => {
+  res.status(405).json({
+    error: 'Method Not Allowed',
+    hint: '本接口仅支持 POST，Content-Type: application/json，body: { "text": "病情描述", "modelId": "可选" }',
+  });
+});
+
 const RECORD_SYSTEM_PROMPT = `你是一位专业的医疗文书助手。根据用户提供的病情描述（可能包含主诉、体征等），生成一份结构化的标准病历，严格按以下 JSON 格式输出，不要包含其他说明文字：
 {"chiefComplaint":"主诉（一句话）","assessment":"护理评估（简要体格与状态描述）","plan":"诊疗计划（分点列出）"}
 只输出这一份 JSON，不要 markdown 代码块。`;
