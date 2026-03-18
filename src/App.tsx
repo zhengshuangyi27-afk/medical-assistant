@@ -9,7 +9,7 @@ import Home from './pages/Home';
 import Records from './pages/Records';
 import Drafts from './pages/Drafts';
 import Search from './pages/Search';
-import QA from './pages/QA';
+import Report from './pages/Report';
 import Profile from './pages/Profile';
 import Calculator from './pages/Calculator';
 import Tasks from './pages/Tasks';
@@ -28,7 +28,8 @@ export default function App() {
           <Route path="/records" element={<Records />} />
           <Route path="/drafts" element={<Drafts />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/qa" element={<QA />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/qa" element={<Report />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/calculator" element={<Calculator />} />

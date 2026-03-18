@@ -120,7 +120,7 @@ export default function Records() {
           <button onClick={() => navigate(-1)} aria-label="返回" className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
             <ChevronLeft className="w-6 h-6 text-slate-600" />
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">Ai 病例生成</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">病例生成</h1>
           <Link to="/drafts" className="text-blue-600 font-medium text-sm shrink-0 active:opacity-70">
             草稿箱 ({draftCount})
           </Link>

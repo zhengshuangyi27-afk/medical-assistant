@@ -1,15 +1,26 @@
-.quick-title { font-weight: bold; margin-bottom: 24rpx; }
+.container { min-height: 100vh; background: #f5f7fa; padding: 24rpx 24rpx 120rpx; }
+.card { margin-bottom: 24rpx; border-radius: 32rpx; padding: 32rpx; }
+.card-white { background: #fff; border: 1rpx solid #f1f5f9; box-shadow: 0 1rpx 3rpx rgba(0,0,0,0.04); }
+.quick-title { font-weight: bold; font-size: 36rpx; color: #0f172a; margin-bottom: 24rpx; }
 .grid { display: flex; flex-wrap: wrap; gap: 24rpx; }
 .grid-item {
   flex: 1;
   min-width: 180rpx;
   padding: 32rpx;
-  background: #f0f4ff;
   border-radius: 24rpx;
   text-align: center;
+  border: 1rpx solid #f1f5f9;
 }
-.grid-label { font-size: 26rpx; font-weight: 600; color: #0055BB; }
-.placeholder { color: #999; font-size: 26rpx; }
+.item-indigo { background: #eef2ff; }
+.item-teal { background: #f0fdfa; }
+.item-blue { background: #eff6ff; }
+.item-amber { background: #fffbeb; }
+.grid-label { font-size: 28rpx; font-weight: 600; }
+.item-indigo .grid-label { color: #4338ca; }
+.item-teal .grid-label { color: #0d9488; }
+.item-blue .grid-label { color: #2563eb; }
+.item-amber .grid-label { color: #d97706; }
+.placeholder { color: #94a3b8; font-size: 26rpx; }
 
 .bottom-nav {
   position: fixed;

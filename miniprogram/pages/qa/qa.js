@@ -2,50 +2,69 @@ const api = require('../../utils/api.js');
 
 Page({
   data: {
-    inputValue: '',
+    previewPath: '',
     loading: false,
-    messages: [],
+    error: '',
+    parsed: {},
+    rawResult: '',
+    hasAdviceBlock: false,
   },
 
-  onInput(e) {
-    this.setData({ inputValue: e.detail.value });
+  onChooseCamera() {
+    this.chooseImage('camera');
   },
 
-  async onSend(ev) {
-    const text = (ev && ev.currentTarget && ev.currentTarget.dataset.text) || (this.data.inputValue || '').trim();
-    if (!text || this.data.loading) return;
+  onChooseAlbum() {
+    this.chooseImage('album');
+  },
 
-    const userMsg = { id: Date.now(), role: 'user', content: text };
-    this.setData({
-      messages: this.data.messages.concat([userMsg]),
-      inputValue: '',
-      loading: true,
+  chooseImage(sourceType) {
+    if (this.data.loading) return;
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: [sourceType],
+      success: (res) => {
+        const path = res.tempFilePaths[0];
+        this.setData({
+          previewPath: path,
+          error: '',
+          parsed: {},
+          rawResult: '',
+          hasAdviceBlock: false,
+        });
+        this.uploadAndParse(path);
+      },
+      fail: (err) => {
+        if (err.errMsg && !err.errMsg.includes('cancel')) {
+          wx.showToast({ title: '选择失败', icon: 'none' });
+        }
+      },
     });
-
-    try {
-      const selectedLlm = getApp().globalData.selectedLlm || wx.getStorageSync('selected_llm') || '';
-      const history = this.data.messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
-      const data = await api.post('/api/llm/chat', {
-        prompt: text,
-        modelId: selectedLlm || undefined,
-        history,
-      });
-      const aiMsg = { id: Date.now() + 1, role: 'ai', content: data.reply || '' };
-      this.setData({
-        messages: this.data.messages.concat([aiMsg]),
-        loading: false,
-      });
-    } catch (e) {
-      const aiMsg = { id: Date.now() + 1, role: 'ai', content: '请求失败：' + (e.message || '请重试') };
-      this.setData({
-        messages: this.data.messages.concat([aiMsg]),
-        loading: false,
-      });
-    }
   },
 
-  onSuggestionTap(e) {
-    const text = e.currentTarget.dataset.text;
-    if (text) this.onSend({ currentTarget: { dataset: { text } } });
+  uploadAndParse(filePath) {
+    this.setData({ loading: true });
+    api.uploadReportImage(filePath)
+      .then((data) => {
+        const p = data.parsed || {};
+        const hasAdvice =
+          (p.suggestions && p.suggestions.length > 0) ||
+          !!p.visitRecommendation ||
+          (p.recommendedDepartments && p.recommendedDepartments.length > 0) ||
+          (p.lifestyleAndDietAdvice && p.lifestyleAndDietAdvice.length > 0);
+        this.setData({
+          loading: false,
+          parsed: p,
+          rawResult: data.result || '',
+          hasAdviceBlock: !!hasAdvice,
+        });
+      })
+      .catch((e) => {
+        this.setData({
+          loading: false,
+          error: e.message || '解析失败，请重试',
+        });
+      });
   },
 });

@@ -1,6 +1,6 @@
-import { Search as SearchIcon, Heart, Share2, ChevronRight, ChevronDown, ChevronUp, Clock, Calculator, FileText, ChevronLeft, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Heart, Share2, ChevronRight, ChevronDown, ChevronUp, Clock, ChevronLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
 import Markdown from 'react-markdown';
 import { apiPost } from '@/src/lib/api';
@@ -23,6 +23,52 @@ export default function Search() {
   /** 已展开的卡片下标（固定高度时点击「全部」展开） */
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
   const [fullTextOpen, setFullTextOpen] = useState(false);
+  /** 非药品类查询被拦截时的提示 */
+  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
+
+  const SEARCH_HISTORY_KEY = 'medical_assistant_search_history';
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+      if (raw) {
+        const arr = JSON.parse(raw) as unknown;
+        setRecentSearches(Array.isArray(arr) ? (arr as string[]).filter((s) => typeof s === 'string' && s.trim()) : []);
+      } else {
+        setRecentSearches(['阿莫西林', '二甲双胍', '布洛芬']);
+      }
+    } catch {
+      setRecentSearches(['阿莫西林', '二甲双胍', '布洛芬']);
+    }
+  }, []);
+
+  const saveRecentSearches = (terms: string[]) => {
+    setRecentSearches(terms);
+    try {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(terms));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const addToRecent = (term: string) => {
+    const t = term.trim();
+    if (!t) return;
+    setRecentSearches((prev) => {
+      const next = [t, ...prev.filter((x) => x !== t)].slice(0, 20);
+      try {
+        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  const clearRecentSearches = () => {
+    saveRecentSearches([]);
+  };
 
   const toggleCardExpanded = (idx: number) => {
     setExpandedCards((prev) => {
@@ -137,15 +183,22 @@ export default function Search() {
   const handleSearch = async (searchQuery: string = query) => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
+    setBlockedMessage(null);
     setStructuredResult(null);
     setNumberedSections([]);
     setExpandedCards(new Set());
     try {
       const { getSelectedModelId } = await import('@/src/lib/llm');
-      const data = await apiPost<{ result: string }>('/api/llm/query', {
+      const data = await apiPost<{ result: string; blocked?: boolean; message?: string }>('/api/llm/query', {
         query: searchQuery,
         modelId: getSelectedModelId(),
       });
+      if (data.blocked) {
+        setResult(null);
+        setBlockedMessage(data.message || '本模块仅限药品与用药相关查询。');
+        return;
+      }
+      addToRecent(searchQuery.trim());
       const text = data.result || '未获取到结果';
       setResult(text);
       const structured = parseStructured(text);
@@ -168,7 +221,7 @@ export default function Search() {
           <button onClick={() => navigate(-1)} className="p-1 -ml-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
             <ChevronLeft className="w-6 h-6 text-slate-600" />
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">Ai 用药查询</h1>
+          <h1 className="absolute left-1/2 -translate-x-1/2 font-bold text-xl tracking-tight text-blue-900">用药查询</h1>
           <div className="w-10 h-10 shrink-0" aria-hidden />
         </div>
         <div className="px-4 pb-4">
@@ -182,7 +235,7 @@ export default function Search() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="block w-full pl-10 pr-14 py-3 bg-[#F5F7FA] border-none rounded-xl focus:ring-2 focus:ring-[#0055BB] text-sm placeholder-gray-500 outline-none" 
-            placeholder="搜索药物、症状或指南..." 
+            placeholder="仅支持药品/用药查询，如：二甲双胍用法" 
           />
           {isLoading ? (
             <span className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -201,6 +254,12 @@ export default function Search() {
       </nav>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-10">
+        {blockedMessage && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900 text-sm leading-relaxed">
+            <p className="font-bold text-amber-800 mb-1">无法查询</p>
+            <p>{blockedMessage}</p>
+          </div>
+        )}
         {/* AI Search Results Section */}
         {result ? (
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -460,40 +519,37 @@ export default function Search() {
           <section>
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">最近搜索</h2>
-              <button className="text-xs text-gray-400 font-medium hover:text-gray-600">清除全部</button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {['阿莫西林', '高血压指南', '小儿发烧'].map((term) => (
-                <div 
-                  key={term} 
-                  onClick={() => {
-                    setQuery(term);
-                    handleSearch(term);
-                  }}
-                  className="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 border border-gray-200 flex items-center space-x-2 cursor-pointer hover:bg-gray-50"
+              {recentSearches.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearRecentSearches}
+                  className="text-xs text-gray-400 font-medium hover:text-gray-600"
                 >
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span>{term}</span>
-                </div>
-              ))}
+                  清除全部
+                </button>
+              )}
             </div>
+            {recentSearches.length === 0 ? (
+              <p className="text-sm text-gray-400 py-2">暂无最近搜索，输入药品名搜索后会自动记录</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((term) => (
+                  <div
+                    key={term}
+                    onClick={() => {
+                      setQuery(term);
+                      handleSearch(term);
+                    }}
+                    className="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 border border-gray-200 flex items-center space-x-2 cursor-pointer hover:bg-gray-50"
+                  >
+                    <Clock className="h-4 w-4 text-gray-400" />
+                    <span>{term}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
-
-        {/* Quick Reference Footer Grid */}
-        <section className="grid grid-cols-2 gap-3">
-          <div 
-            onClick={() => navigate('/calculator')}
-            className="bg-[#0055BB] p-4 rounded-2xl flex flex-col justify-between h-28 text-white shadow-lg shadow-blue-100 cursor-pointer active:scale-95 transition-transform"
-          >
-            <Calculator className="h-6 w-6 opacity-80" />
-            <span className="font-bold text-sm">医学计算器</span>
-          </div>
-          <div className="bg-white p-4 rounded-2xl flex flex-col justify-between h-28 text-[#0055BB] border border-blue-50 shadow-sm cursor-pointer active:scale-95 transition-transform">
-            <FileText className="h-6 w-6 text-[#0055BB]" />
-            <span className="font-bold text-sm text-gray-800">处方模板</span>
-          </div>
-        </section>
       </main>
     </div>
   );

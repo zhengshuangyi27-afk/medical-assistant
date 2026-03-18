@@ -62,4 +62,31 @@ function uploadVoice(filePath) {
   });
 }
 
-module.exports = { request, post, get, uploadVoice, apiBase };
+// 报告助手：上传报告图片，后端解析并返回固定格式
+function uploadReportImage(filePath) {
+  const base = apiBase();
+  const modelId = app.globalData.selectedLlm || wx.getStorageSync('selected_llm') || '';
+  return new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: base + '/api/report/parse',
+      filePath,
+      name: 'image',
+      formData: modelId ? { modelId } : {},
+      success: (res) => {
+        try {
+          const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || '解析失败'));
+          }
+        } catch (e) {
+          reject(new Error(res.data && res.data.substring(0, 100) || '解析失败'));
+        }
+      },
+      fail: (err) => reject(new Error(err.errMsg || '上传失败')),
+    });
+  });
+}
+
+module.exports = { request, post, get, uploadVoice, uploadReportImage, apiBase };

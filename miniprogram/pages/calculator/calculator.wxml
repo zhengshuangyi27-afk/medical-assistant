@@ -1,56 +1,100 @@
 <view class="container">
-  <view class="tabs">
-    <view class="tab {{tab === 'bmi' ? 'active' : ''}}" data-tab="bmi" bindtap="switchTab">BMI/BSA</view>
-    <view class="tab {{tab === 'crcl' ? 'active' : ''}}" data-tab="crcl" bindtap="switchTab">肌酐清除率</view>
-  </view>
+  <scroll-view class="tab-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="tab-row">
+      <view class="tab {{tab === 'bmi' ? 'active' : ''}}" data-tab="bmi" bindtap="switchTab">BMI</view>
+      <view class="tab {{tab === 'crcl' ? 'active' : ''}}" data-tab="crcl" bindtap="switchTab">CrCl</view>
+      <view class="tab {{tab === 'egfr' ? 'active' : ''}}" data-tab="egfr" bindtap="switchTab">eGFR</view>
+      <view class="tab {{tab === 'ag' ? 'active' : ''}}" data-tab="ag" bindtap="switchTab">AG</view>
+      <view class="tab {{tab === 'ibw' ? 'active' : ''}}" data-tab="ibw" bindtap="switchTab">IBW</view>
+      <view class="tab {{tab === 'map' ? 'active' : ''}}" data-tab="map" bindtap="switchTab">MAP</view>
+      <view class="tab {{tab === 'nacorr' ? 'active' : ''}}" data-tab="nacorr" bindtap="switchTab">血钠</view>
+    </view>
+  </scroll-view>
+  <text class="hint">仅供学习参考，不能替代诊疗。</text>
 
   <block wx:if="{{tab === 'bmi'}}">
     <view class="card">
-      <view class="field">
-        <text class="label">身高 (cm)</text>
-        <input type="digit" placeholder="175" value="{{height}}" bindinput="onHeight"/>
-      </view>
-      <view class="field">
-        <text class="label">体重 (kg)</text>
-        <input type="digit" placeholder="70" value="{{weight}}" bindinput="onWeight"/>
-      </view>
+      <view class="field"><text class="label">身高 (cm)</text><input type="digit" placeholder="175" value="{{height}}" bindinput="onHeight"/></view>
+      <view class="field"><text class="label">体重 (kg)</text><input type="digit" placeholder="70" value="{{weight}}" bindinput="onWeight"/></view>
     </view>
     <view wx:if="{{bmi > 0}}" class="card result">
-      <text class="result-label">BMI</text>
-      <text class="result-value">{{bmi}}</text>
-      <text class="result-unit">kg/m²  {{bmiStatus}}</text>
-      <text class="result-label">BSA (Mosteller)</text>
-      <text class="result-value">{{bsa}}</text>
+      <text class="result-label">BMI {{bmiStatus}}</text>
+      <text class="result-value">{{bmiStr}}</text>
+      <text class="result-unit">kg/m²</text>
+      <text class="result-label">BSA</text>
+      <text class="result-value">{{bsaStr}}</text>
       <text class="result-unit">m²</text>
     </view>
   </block>
 
   <block wx:if="{{tab === 'crcl'}}">
     <view class="card">
-      <view class="field">
-        <text class="label">性别</text>
+      <view class="field"><text class="label">性别</text>
         <view class="gender">
           <view class="gender-btn {{gender === 'M' ? 'active' : ''}}" data-g="M" bindtap="onGender">男</view>
           <view class="gender-btn {{gender === 'F' ? 'active' : ''}}" data-g="F" bindtap="onGender">女</view>
         </view>
       </view>
-      <view class="field">
-        <text class="label">年龄 (岁)</text>
-        <input type="digit" placeholder="65" value="{{age}}" bindinput="onAge"/>
-      </view>
-      <view class="field">
-        <text class="label">体重 (kg)</text>
-        <input type="digit" placeholder="70" value="{{crWeight}}" bindinput="onCrWeight"/>
-      </view>
-      <view class="field">
-        <text class="label">血清肌酐 (μmol/L)</text>
-        <input type="digit" placeholder="90" value="{{creatinine}}" bindinput="onCreatinine"/>
-      </view>
+      <view class="field"><text class="label">年龄</text><input type="digit" value="{{age}}" bindinput="onAge"/></view>
+      <view class="field"><text class="label">体重 (kg)</text><input type="digit" value="{{crWeight}}" bindinput="onCrWeight"/></view>
+      <view class="field"><text class="label">肌酐 (μmol/L)</text><input type="digit" value="{{creatinine}}" bindinput="onCreatinine"/></view>
     </view>
-    <view wx:if="{{crcl > 0}}" class="card result">
-      <text class="result-label">肌酐清除率 (Cockcroft-Gault)</text>
-      <text class="result-value">{{crcl}}</text>
-      <text class="result-unit">mL/min</text>
+    <view wx:if="{{crcl > 0}}" class="card result"><text class="result-label">CrCl</text><text class="result-value">{{crclStr}}</text><text class="result-unit">mL/min</text></view>
+  </block>
+
+  <block wx:if="{{tab === 'egfr'}}">
+    <view class="card">
+      <text class="tip">MDRD，肌酐 μmol/L，≥18 岁</text>
+      <view class="field"><text class="label">性别</text>
+        <view class="gender">
+          <view class="gender-btn {{gender === 'M' ? 'active' : ''}}" data-g="M" bindtap="onGender">男</view>
+          <view class="gender-btn {{gender === 'F' ? 'active' : ''}}" data-g="F" bindtap="onGender">女</view>
+        </view>
+      </view>
+      <view class="field"><text class="label">年龄</text><input type="digit" value="{{egfrAge}}" bindinput="onEgfrAge"/></view>
+      <view class="field"><text class="label">肌酐 (μmol/L)</text><input type="digit" value="{{egfrCr}}" bindinput="onEgfrCr"/></view>
     </view>
+    <view wx:if="{{egfr > 0}}" class="card result"><text class="result-label">eGFR</text><text class="result-value">{{egfrStr}}</text><text class="result-unit">mL/min/1.73m²</text></view>
+  </block>
+
+  <block wx:if="{{tab === 'ag'}}">
+    <view class="card">
+      <text class="tip">AG = Na − Cl − HCO₃</text>
+      <view class="field"><text class="label">Na</text><input type="digit" value="{{na}}" bindinput="onNa"/></view>
+      <view class="field"><text class="label">Cl</text><input type="digit" value="{{cl}}" bindinput="onCl"/></view>
+      <view class="field"><text class="label">HCO₃</text><input type="digit" value="{{hco3}}" bindinput="onHco3"/></view>
+    </view>
+    <view wx:if="{{agShow}}" class="card result"><text class="result-label">阴离子间隙</text><text class="result-value">{{agStr}}</text><text class="result-unit">mmol/L</text></view>
+  </block>
+
+  <block wx:if="{{tab === 'ibw'}}">
+    <view class="card">
+      <view class="field"><text class="label">性别</text>
+        <view class="gender">
+          <view class="gender-btn {{gender === 'M' ? 'active' : ''}}" data-g="M" bindtap="onGender">男</view>
+          <view class="gender-btn {{gender === 'F' ? 'active' : ''}}" data-g="F" bindtap="onGender">女</view>
+        </view>
+      </view>
+      <view class="field"><text class="label">身高 (cm)</text><input type="digit" value="{{ibwHeight}}" bindinput="onIbwHeight"/></view>
+    </view>
+    <view wx:if="{{ibw > 0}}" class="card result"><text class="result-label">理想体重</text><text class="result-value">{{ibwStr}}</text><text class="result-unit">kg</text></view>
+  </block>
+
+  <block wx:if="{{tab === 'map'}}">
+    <view class="card">
+      <view class="field"><text class="label">收缩压</text><input type="digit" value="{{sbp}}" bindinput="onSbp"/></view>
+      <view class="field"><text class="label">舒张压</text><input type="digit" value="{{dbp}}" bindinput="onDbp"/></view>
+    </view>
+    <view wx:if="{{mapVal > 0}}" class="card result"><text class="result-label">MAP</text><text class="result-value">{{mapStr}}</text><text class="result-unit">mmHg</text></view>
+  </block>
+
+  <block wx:if="{{tab === 'nacorr'}}">
+    <view class="card">
+      <text class="tip">血糖填 mmol/L，&gt;5.6 时校正有意义</text>
+      <view class="field"><text class="label">血钠</text><input type="digit" value="{{naSerum}}" bindinput="onNaSerum"/></view>
+      <view class="field"><text class="label">血糖 (mmol/L)</text><input type="digit" value="{{glucoseMmol}}" bindinput="onGlucose"/></view>
+    </view>
+    <view wx:if="{{naCorrShow}}" class="card result"><text class="result-label">校正血钠</text><text class="result-value">{{naCorrStr}}</text><text class="result-unit">mmol/L</text></view>
+    <text wx:if="{{naCorrHint}}" class="hint">血糖未明显高于正常时可忽略校正。</text>
   </block>
 </view>

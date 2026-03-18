@@ -11,7 +11,7 @@ export default function BottomNav() {
   ];
 
   const navItemsRight = [
-    { name: '问答', icon: MessageSquare, path: '/qa' },
+    { name: '报告', icon: MessageSquare, path: '/report' },
     { name: '我的', icon: User, path: '/profile' },
   ];
 

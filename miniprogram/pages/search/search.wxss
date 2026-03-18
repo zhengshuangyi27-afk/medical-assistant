@@ -1,6 +1,15 @@
 .search-box { display: flex; align-items: center; gap: 16rpx; }
 .search-input { flex: 1; padding: 24rpx; background: #f5f7fa; border-radius: 16rpx; }
 .search-btn { background: #0055BB; color: #fff; padding: 24rpx 32rpx; border-radius: 16rpx; font-size: 28rpx; }
+.blocked-box {
+  margin-top: 24rpx;
+  background: #fffbeb;
+  border: 1rpx solid #fde68a;
+  padding: 24rpx;
+  border-radius: 16rpx;
+}
+.blocked-title { display: block; font-weight: bold; color: #92400e; margin-bottom: 12rpx; font-size: 30rpx; }
+.blocked-text { font-size: 28rpx; color: #78350f; line-height: 1.6; }
 .result-box { margin-top: 24rpx; }
 .result-title { font-weight: bold; margin-bottom: 16rpx; color: #0055BB; }
 .result-text { font-size: 28rpx; color: #333; line-height: 1.6; white-space: pre-wrap; }

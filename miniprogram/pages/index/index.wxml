@@ -1,19 +1,22 @@
 <view class="container">
-  <view class="card">
+  <view class="card card-white">
     <view class="quick-title">快捷访问</view>
     <view class="grid">
-      <navigator url="/pages/records/records" class="grid-item">
-        <text class="grid-label">Ai病例生成</text>
+      <navigator url="/pages/records/records" class="grid-item item-indigo">
+        <text class="grid-label">病例生成</text>
       </navigator>
-      <navigator url="/pages/search/search" class="grid-item">
-        <text class="grid-label">Ai用药查询</text>
+      <navigator url="/pages/search/search" class="grid-item item-teal">
+        <text class="grid-label">用药查询</text>
       </navigator>
-      <navigator url="/pages/qa/qa" class="grid-item">
-        <text class="grid-label">Ai科室问答</text>
+      <navigator url="/pages/qa/qa" class="grid-item item-blue">
+        <text class="grid-label">报告助手</text>
+      </navigator>
+      <navigator url="/pages/calculator/calculator" class="grid-item item-amber">
+        <text class="grid-label">医学计算器</text>
       </navigator>
     </view>
   </view>
-  <view class="card">
+  <view class="card card-white">
     <view class="quick-title">今日任务</view>
     <text class="placeholder">任务列表（可从后端拉取）</text>
   </view>
@@ -21,7 +24,7 @@
     <navigator url="/pages/index/index" class="nav-item">首页</navigator>
     <navigator url="/pages/records/records" class="nav-item">病历</navigator>
     <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
-    <navigator url="/pages/qa/qa" class="nav-item">问答</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item">报告</navigator>
     <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
   </view>
 </view>

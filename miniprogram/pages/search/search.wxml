@@ -3,7 +3,7 @@
     <view class="search-box">
       <input
         class="search-input"
-        placeholder="搜索药物、症状或指南..."
+        placeholder="仅支持药品/用药查询"
         value="{{query}}"
         bindinput="onInput"
         bindconfirm="onSearch"
@@ -14,13 +14,14 @@
     </view>
   </view>
 
+  <view wx:if="{{blockedMsg}}" class="card blocked-box">
+    <text class="blocked-title">无法查询</text>
+    <text class="blocked-text">{{blockedMsg}}</text>
+  </view>
+
   <view wx:if="{{result}}" class="card result-box">
     <view class="result-title">Ai 回答</view>
     <text class="result-text">{{result}}</text>
-  </view>
-
-  <view class="card" bindtap="goCalculator">
-    <text class="link">医学计算器</text>
   </view>
 
   <view class="bottom-nav">

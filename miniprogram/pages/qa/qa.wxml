@@ -1,47 +1,104 @@
 <view class="container">
-  <scroll-view scroll-y class="msg-list" scroll-into-view="{{'msg-' + (messages.length - 1)}}">
-    <view
-      wx:for="{{messages}}"
-      wx:key="id"
-      id="msg-{{index}}"
-      class="msg-row {{item.role}}"
-    >
-      <view class="bubble">{{item.content}}</view>
-    </view>
-    <view wx:if="{{loading}}" class="msg-row ai">
-      <view class="bubble">正在思考...</view>
-    </view>
-  </scroll-view>
-
-  <view class="suggestions">
-    <view
-      wx:for="{{['手术准备','化验流程','术后护理']}}"
-      wx:key="*this"
-      class="chip"
-      data-text="{{item}}"
-      bindtap="onSuggestionTap"
-    >
-      {{item}}
+  <view class="section">
+    <text class="section-desc">上传报告图片，AI 将解析并标注异常指标</text>
+    <view class="btn-row">
+      <button class="btn btn-primary" bindtap="onChooseCamera">拍照</button>
+      <button class="btn btn-outline" bindtap="onChooseAlbum">上传照片</button>
     </view>
   </view>
 
-  <view class="input-bar">
-    <input
-      class="input"
-      placeholder="输入问题..."
-      value="{{inputValue}}"
-      bindinput="onInput"
-      confirm-type="send"
-      bindconfirm="onSend"
-    />
-    <button class="send-btn" bindtap="onSend" disabled="{{loading}}">发送</button>
+  <view wx:if="{{previewPath}}" class="section card">
+    <text class="label">当前图片</text>
+    <image src="{{previewPath}}" class="preview-img" mode="widthFix" />
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-row">
+    <text>正在解析报告…</text>
+  </view>
+
+  <view wx:if="{{error}}" class="error-row">
+    <text>{{error}}</text>
+  </view>
+
+  <view wx:if="{{!loading && (parsed || rawResult)}}" class="section card result-card">
+    <view class="result-head">
+      <text class="result-title">解析结果</text>
+    </view>
+
+    <view wx:if="{{parsed.reportType}}" class="block">
+      <text class="block-label">报告类型</text>
+      <text class="block-value">{{parsed.reportType}}</text>
+    </view>
+
+    <view wx:if="{{parsed.abnormalSummary && parsed.abnormalSummary.length > 0}}" class="abnormal-box">
+      <text class="abnormal-title">异常指标提示</text>
+      <view wx:for="{{parsed.abnormalSummary}}" wx:key="index" class="abnormal-item">
+        <text>• {{item}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{parsed.items && parsed.items.length > 0}}" class="block">
+      <text class="block-label">检查项目</text>
+      <view class="table-wrap">
+        <view class="table-row table-head">
+          <text class="col-name">项目</text>
+          <text class="col-value">结果</text>
+          <text class="col-ref">参考范围</text>
+        </view>
+        <view
+          wx:for="{{parsed.items}}"
+          wx:key="index"
+          class="table-row {{item.isAbnormal ? 'row-abnormal' : ''}}"
+        >
+          <text class="col-name">{{item.name}}</text>
+          <text class="col-value {{item.isAbnormal ? 'text-abnormal' : ''}}">{{item.value}} {{item.unit}}</text>
+          <text class="col-ref">{{item.reference || '—'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{parsed.summary}}" class="block summary-block">
+      <text class="block-label">总结</text>
+      <text class="block-value">{{parsed.summary}}</text>
+    </view>
+
+    <view wx:if="{{hasAdviceBlock}}" class="advice-section">
+      <text class="advice-main-title">健康与就诊建议</text>
+      <view wx:if="{{parsed.suggestions && parsed.suggestions.length > 0}}" class="advice-box advice-blue">
+        <text class="advice-subtitle">综合建议</text>
+        <view wx:for="{{parsed.suggestions}}" wx:key="index" class="advice-line">
+          <text>• {{item}}</text>
+        </view>
+      </view>
+      <view wx:if="{{parsed.visitRecommendation || (parsed.recommendedDepartments && parsed.recommendedDepartments.length)}}" class="advice-box advice-gray">
+        <text class="advice-subtitle">就医与科室</text>
+        <text wx:if="{{parsed.visitRecommendation}}" class="visit-text">{{parsed.visitRecommendation}}</text>
+        <view wx:if="{{parsed.recommendedDepartments && parsed.recommendedDepartments.length > 0}}">
+          <text class="dept-label">建议就诊科室</text>
+          <view class="dept-tags">
+            <text wx:for="{{parsed.recommendedDepartments}}" wx:key="index" class="dept-tag">{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{parsed.lifestyleAndDietAdvice && parsed.lifestyleAndDietAdvice.length > 0}}" class="advice-box advice-green">
+        <text class="advice-subtitle">生活与饮食习惯</text>
+        <view wx:for="{{parsed.lifestyleAndDietAdvice}}" wx:key="index" class="advice-line">
+          <text>• {{item}}</text>
+        </view>
+      </view>
+      <text class="disclaimer">以上建议由 AI 生成，仅供参考，不能替代医生诊断与处方。</text>
+    </view>
+
+    <view wx:if="{{!parsed.reportType && !parsed.items && rawResult}}" class="raw-result">
+      <text class="raw-text">{{rawResult}}</text>
+    </view>
   </view>
 
   <view class="bottom-nav">
     <navigator url="/pages/index/index" class="nav-item">首页</navigator>
     <navigator url="/pages/records/records" class="nav-item">病历</navigator>
     <navigator url="/pages/search/search" class="nav-item nav-center">搜索</navigator>
-    <navigator url="/pages/qa/qa" class="nav-item nav-active">问答</navigator>
+    <navigator url="/pages/qa/qa" class="nav-item nav-active">报告</navigator>
     <navigator url="/pages/profile/profile" class="nav-item">我的</navigator>
   </view>
 </view>

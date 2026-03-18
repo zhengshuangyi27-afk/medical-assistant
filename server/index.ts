@@ -26,6 +26,7 @@ import { llmRouter } from './routes/llm.js';
 import { recordsRouter } from './routes/records.js';
 import { configRouter } from './routes/config.js';
 import { voiceRouter } from './routes/voice.js';
+import { reportRouter } from './routes/report.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +39,7 @@ app.use('/api/llm', llmRouter);
 app.use('/api/records', recordsRouter);
 app.use('/api/config', configRouter);
 app.use('/api/voice', voiceRouter);
+app.use('/api/report', reportRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: new Date().toISOString() });

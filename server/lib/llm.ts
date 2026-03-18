@@ -120,3 +120,112 @@ export async function complete(
     { role: 'user', content: systemPrompt + '\n\n' + userContent },
   ]);
 }
+
+/** 带图片的解析（视觉模型）：传入 base64 图片，返回模型文本结果 */
+export async function completeWithImage(
+  config: LlmConfigRow,
+  systemPrompt: string,
+  userText: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<string> {
+  const provider = (config.provider || 'gemini').toLowerCase();
+  if (provider === 'gemini') {
+    return completeWithImageGemini(config.model_id, systemPrompt, userText, imageBase64, mimeType);
+  }
+  if (provider === 'openai') {
+    return completeWithImageOpenAICompatible(
+      'https://api.openai.com/v1',
+      process.env.OPENAI_API_KEY!,
+      config.model_id,
+      systemPrompt,
+      userText,
+      imageBase64,
+      mimeType
+    );
+  }
+  if (provider === 'dashscope') {
+    return completeWithImageOpenAICompatible(
+      DASHSCOPE_BASE_URL,
+      process.env.DASHSCOPE_API_KEY!,
+      config.model_id,
+      systemPrompt,
+      userText,
+      imageBase64,
+      mimeType
+    );
+  }
+  throw new Error(`Vision not supported for provider: ${provider}`);
+}
+
+async function completeWithImageGemini(
+  modelId: string,
+  systemPrompt: string,
+  userText: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<string> {
+  if (!geminiClient) throw new Error('GEMINI_API_KEY not configured');
+  const contents = [
+    { inlineData: { mimeType: mimeType || 'image/jpeg', data: imageBase64 } },
+    { text: systemPrompt + '\n\n' + userText },
+  ];
+  const response = await withTimeout(
+    geminiClient.models.generateContent({ model: modelId, contents }),
+    LLM_TIMEOUT_MS,
+    'Gemini'
+  );
+  return response.text ?? '';
+}
+
+async function completeWithImageOpenAICompatible(
+  baseUrl: string,
+  apiKey: string,
+  modelId: string,
+  systemPrompt: string,
+  userText: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<string> {
+  const url = baseUrl.replace(/\/$/, '') + '/chat/completions';
+  const dataUrl = `data:${mimeType || 'image/jpeg'};base64,${imageBase64}`;
+  const body = {
+    model: modelId,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: userText },
+          { type: 'image_url', image_url: { url: dataUrl } },
+        ],
+      },
+    ],
+  };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API ${res.status}: ${err}`);
+    }
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    return data.choices?.[0]?.message?.content ?? '';
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if ((e as Error).name === 'AbortError') {
+      throw new Error(`请求超时（${LLM_TIMEOUT_MS / 1000}秒），请稍后重试`);
+    }
+    throw e;
+  }
+}
