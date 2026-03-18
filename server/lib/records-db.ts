@@ -1,9 +1,12 @@
 import { supabase } from './supabase.js';
-import { sqliteCreateRecord, sqliteListRecords, type RecordRow } from './medical-records-sqlite.js';
+import type { RecordRow } from './records-types.js';
+
+export type { RecordRow };
 
 export async function createRecord(row: RecordRow): Promise<string> {
   if (!supabase) {
-    return sqliteCreateRecord(row);
+    const m = await import('./medical-records-sqlite.js');
+    return m.sqliteCreateRecord(row);
   }
   const insert = {
     user_id: row.user_id,
@@ -27,7 +30,8 @@ export async function createRecord(row: RecordRow): Promise<string> {
 
 export async function listRecords(userId: string | null) {
   if (!supabase) {
-    return sqliteListRecords(userId);
+    const m = await import('./medical-records-sqlite.js');
+    return m.sqliteListRecords(userId);
   }
   let q = supabase
     .from('medical_records')

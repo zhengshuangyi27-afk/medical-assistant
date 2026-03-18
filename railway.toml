@@ -1,0 +1,8 @@
+# Railway：明确用 Node 跑 Express API（避免被误判为纯静态站）
+# 文档：docs/DEPLOY_RAILWAY.md
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "npm start"

@@ -39,7 +39,8 @@ import { reportRouter } from './routes/report.js';
 import { authRouter } from './routes/auth.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '2mb' }));
@@ -64,6 +65,6 @@ app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'API 路径不存在，请确认后端已更新并包含 /api/auth 等路由' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Medical Assistant API running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Medical Assistant API listening on http://${HOST}:${PORT}`);
 });

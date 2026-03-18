@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { hashPassword } from './auth-password.js';
+import type { UserRow } from './auth-types.js';
 
 const dataDir = path.join(process.cwd(), 'server', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
@@ -49,16 +50,7 @@ function migrateUsersTable(): void {
 
 migrateUsersTable();
 
-export type UserRow = {
-  id: string;
-  phone: string;
-  password_hash: string | null;
-  nickname: string | null;
-  created_at: number;
-  avatar_url?: string | null;
-  updated_at?: number | null;
-  last_login_at?: number | null;
-};
+export type { UserRow };
 
 export function findUserByPhone(phone: string): UserRow | undefined {
   return db.prepare('SELECT * FROM users WHERE phone = ?').get(phone) as UserRow | undefined;

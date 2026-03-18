@@ -5,6 +5,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
+import type { RecordRow } from './records-types.js';
 
 const dataDir = path.join(process.cwd(), 'server', 'data');
 const dbPath = path.join(dataDir, 'medical_records.sqlite');
@@ -42,17 +43,7 @@ for (const col of ['patient_gender', 'patient_age', 'department', 'updated_at'] 
   }
 }
 
-export type RecordRow = {
-  user_id: string | null;
-  patient_name: string | null;
-  patient_gender?: string | null;
-  patient_age?: string | null;
-  department?: string | null;
-  chief_complaint: string;
-  assessment: string;
-  plan: string;
-  raw_input: string | null;
-};
+export type { RecordRow };
 
 export function sqliteCreateRecord(row: RecordRow): string {
   const id = randomUUID();

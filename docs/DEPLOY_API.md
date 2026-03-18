@@ -51,32 +51,14 @@
 
 ---
 
-## 三、方式 A：Railway（推荐，步骤细）
+## 三、方式 A：Railway（推荐）
 
-适合：想少配服务器、按用量付费。
+**更细的分步说明（图文级操作顺序）见：[DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md)**。
 
-1. **注册** [railway.app](https://railway.app)，用 GitHub 登录。
-2. **New Project** → **Deploy from GitHub repo** → 选中本仓库（可先 Fork 再连）。
-3. 项目创建后，点进 **服务（Service）** → **Settings**：
-   - **Root Directory**：若整个仓库就一个项目，可留空；若 monorepo 再指定子目录。
-   - **Start Command**：填  
-     `npm run start`  
-     或  
-     `npx tsx server/index.ts`  
-     （本仓库 `package.json` 已提供 `"start": "tsx server/index.ts"`）
-   - **Watch Paths**：可留默认；仅改前端时不触发 API 重建可自行调整。
-4. **Variables**（同一服务里）添加上面第二节的所有变量。
-5. **Networking** → **Generate Domain**，得到公网地址，例如：  
-   `https://medical-assistant-production-xxxx.up.railway.app`
-6. 浏览器打开：  
-   `https://你的域名/health`  
-   若 JSON 正常，说明 API 已对外可用。
-7. **前端 Vercel**：环境变量 **`VITE_API_URL`** = `https://你的域名`（**无尾斜杠**），保存后 **Redeploy**。
+概要：GitHub 连接 → 部署仓库 → **Start Command：`npm start`** → 配置 Variables → **Generate Domain** → 浏览器访问 **`/health`** → Vercel 设置 **`VITE_API_URL`**。
 
-**常见情况**
-
-- **构建失败（better-sqlite3）**：Railway 一般自带编译环境；若仍失败，在 Variables 里加 `NPM_CONFIG_BUILD_FROM_SOURCE=true` 或查看 Build Logs。生产应以 Supabase 为主，SQLite 仅作未配 Supabase 时的兜底。
-- **应用睡死 / 冷启动**：免费档可能休眠，首次请求慢，属正常。
+- **构建失败（better-sqlite3）**：Variables 加 `NPM_CONFIG_BUILD_FROM_SOURCE=true` 后 Redeploy。
+- **`tsx` 找不到**：`tsx` 已放入 `dependencies`，拉最新代码后重部署。
 
 ---
 

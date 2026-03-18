@@ -1,16 +1,8 @@
 import { supabase } from './supabase.js';
 import { hashPassword } from './auth-password.js';
+import type { UserRow } from './auth-types.js';
 
-export type UserRow = {
-  id: string;
-  phone: string;
-  password_hash: string | null;
-  nickname: string | null;
-  created_at: number;
-  avatar_url?: string | null;
-  updated_at?: number | null;
-  last_login_at?: number | null;
-};
+export type { UserRow };
 
 type MaRow = {
   id: string;
