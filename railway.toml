@@ -4,5 +4,6 @@
 [build]
 builder = "NIXPACKS"
 
+# 直接跑 tsx，避免用 npm start 做父进程；平台发 SIGTERM 时 npm 常会误报 command failed
 [deploy]
-startCommand = "npm start"
+startCommand = "tsx server/index.ts"

@@ -65,6 +65,18 @@ app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'API 路径不存在，请确认后端已更新并包含 /api/auth 等路由' });
 });
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
   console.log(`Medical Assistant API listening on http://${HOST}:${PORT}`);
 });
+
+function shutdown(signal: string) {
+  console.log(`Received ${signal}, shutting down gracefully…`);
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 15_000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

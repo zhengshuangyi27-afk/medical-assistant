@@ -40,7 +40,7 @@
 若界面里仍显示别的启动方式，请手动改：
 
 1. 点进 **该服务** → **Settings** → **Deploy**。  
-2. **Custom Start Command** 填：`npm start`  
+2. **Custom Start Command**：与仓库 **`railway.toml`** 一致，填 **`tsx server/index.ts`**（不要用 `npm start`，否则容器被停时 npm 常打出 SIGTERM 红字）。若提示找不到 `tsx`，再试 **`npx tsx server/index.ts`**。  
 3. **Root Directory**：留空。  
 4. 保存后必要时 **Redeploy**。
 
@@ -113,7 +113,8 @@ https://你的域名/health
 
 | 现象 | 处理 |
 |------|------|
-| **Application failed to respond** | 多为进程在监听前崩溃。请确认 Railway **Variables** 里已配置 **`SUPABASE_URL`** + **`SUPABASE_SERVICE_ROLE_KEY`**（缺一不可）；未配 Supabase 时会加载本机 SQLite 原生模块，在 Linux 上常编译失败导致起不来。配好 Supabase 后 **Redeploy**。另：请拉取最新代码（已改为「有 Supabase 时不加载 SQLite」+ 监听 `0.0.0.0`）。 |
+| **Application failed to respond** | 多为进程在监听前崩溃。请确认 Railway **Variables** 里已配置 **`SUPABASE_URL`** + **`SUPABASE_SERVICE_ROLE_KEY`**。未配 Supabase 时会加载 SQLite，在 Linux 上易失败。 |
+| **`npm error signal SIGTERM` / Stopping Container** | 多为 **正常关容器**：重新部署、缩容、免费档休眠时平台会发 SIGTERM。若日志里先有 `listening on http://0.0.0.0:…` 再出现 SIGTERM，一般是旧实例被换下，**不必慌**。最新代码用 **`tsx server/index.ts`** 直接启动（见 `railway.toml`），可减少 npm 误报。 |
 | 部署成功但立刻 Crash | 看 **Deployments → Logs**：缺 `AUTH_SECRET`、Supabase Key 错误、启动命令错误。 |
 | `tsx: not found` | 拉最新代码后 Redeploy。 |
 | 登录 404 | 前端 **`VITE_API_URL`** 指向 Railway 域名并 Redeploy Vercel。 |
