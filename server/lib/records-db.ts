@@ -1,30 +1,42 @@
 import { supabase } from './supabase.js';
+import { sqliteCreateRecord, sqliteListRecords, type RecordRow } from './medical-records-sqlite.js';
 
-export async function createRecord(row: {
-  user_id: string | null;
-  patient_name: string | null;
-  chief_complaint: string;
-  assessment: string;
-  plan: string;
-  raw_input: string | null;
-}): Promise<string> {
-  if (supabase) {
-    const { data, error } = await supabase
-      .from('medical_records')
-      .insert(row)
-      .select('id')
-      .single();
-    if (!error && data?.id) return data.id;
+export async function createRecord(row: RecordRow): Promise<string> {
+  if (!supabase) {
+    return sqliteCreateRecord(row);
   }
-  return 'local-' + Date.now();
+  const insert = {
+    user_id: row.user_id,
+    patient_name: row.patient_name,
+    patient_gender: row.patient_gender ?? null,
+    patient_age: row.patient_age ?? null,
+    department: row.department ?? null,
+    chief_complaint: row.chief_complaint,
+    assessment: row.assessment,
+    plan: row.plan,
+    raw_input: row.raw_input,
+  };
+  const { data, error } = await supabase.from('medical_records').insert(insert).select('id').single();
+  if (error) {
+    console.error('Supabase medical_records insert:', error.message);
+    throw new Error(error.message || '病历保存失败，请确认已执行 supabase/schema.sql 迁移');
+  }
+  if (!data?.id) throw new Error('病历保存未返回 id');
+  return data.id as string;
 }
 
 export async function listRecords(userId: string | null) {
-  if (supabase) {
-    let q = supabase.from('medical_records').select('id, chief_complaint, assessment, plan, created_at, patient_name');
-    if (userId) q = q.eq('user_id', userId);
-    const { data, error } = await q.order('created_at', { ascending: false }).limit(100);
-    if (!error) return data ?? [];
+  if (!supabase) {
+    return sqliteListRecords(userId);
   }
-  return [];
+  let q = supabase
+    .from('medical_records')
+    .select('id, chief_complaint, assessment, plan, created_at, patient_name');
+  if (userId) q = q.eq('user_id', userId);
+  const { data, error } = await q.order('created_at', { ascending: false }).limit(200);
+  if (error) {
+    console.error('Supabase medical_records list:', error.message);
+    throw new Error(error.message || '病历列表加载失败');
+  }
+  return data ?? [];
 }

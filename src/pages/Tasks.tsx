@@ -58,13 +58,22 @@ export default function Tasks() {
   const [newLocation, setNewLocation] = useState('');
   const [newStatus, setNewStatus] = useState<TaskStatus>('pending');
   const [newIconType, setNewIconType] = useState<'clipboard' | 'clock' | 'check'>('clipboard');
+  const [newReminderOn, setNewReminderOn] = useState(true);
 
   const refreshTasks = () => setTasksState(getTasks());
 
   const handleUpdateStatus = (id: string, newStatus: TaskStatus) => {
-    setTasks(updateTask(id, { status: newStatus }));
+    updateTask(id, { status: newStatus });
     refreshTasks();
     setSelectedTask(null);
+  };
+
+  const toReminderHHmm = (timeVal: string): string => {
+    if (!timeVal?.trim()) return '09:00';
+    const [a, b] = timeVal.split(':');
+    const h = Math.min(23, Math.max(0, parseInt(a, 10) || 0));
+    const m = Math.min(59, Math.max(0, parseInt(b, 10) || 0));
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
   /** 将 time 输入值 HH:mm 转为 "08:30 AM" 格式 */
@@ -85,6 +94,8 @@ export default function Tasks() {
       location: newLocation.trim() || '—',
       status: newStatus,
       iconType: newIconType,
+      reminderHHmm: toReminderHHmm(newTime),
+      reminderEnabled: newReminderOn,
     });
     refreshTasks();
     setNewTitle('');
@@ -92,6 +103,7 @@ export default function Tasks() {
     setNewLocation('');
     setNewStatus('pending');
     setNewIconType('clipboard');
+    setNewReminderOn(true);
     setShowAddForm(false);
   };
 
@@ -220,7 +232,11 @@ export default function Tasks() {
             </div>
             <div className="p-5">
               <p className="font-semibold text-slate-800 text-base mb-1">{selectedTask.title}</p>
-              <p className="text-base text-slate-500 mb-6">{selectedTask.time} — {selectedTask.location}</p>
+              <p className="text-base text-slate-500 mb-1">{selectedTask.time} — {selectedTask.location}</p>
+              <p className="text-xs text-slate-400 mb-6">
+                提醒 {selectedTask.reminderHHmm}
+                {selectedTask.reminderEnabled === false ? '（已关闭）' : ''}
+              </p>
               <div className="space-y-3">
                 {selectedTask.status !== 'completed' && (
                   <button
@@ -250,6 +266,31 @@ export default function Tasks() {
                   >
                     <X className="w-5 h-5" />
                     取消任务
+                  </button>
+                )}
+                {selectedTask.reminderEnabled !== false ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateTask(selectedTask.id, { reminderEnabled: false });
+                      refreshTasks();
+                      setSelectedTask((prev) => (prev ? { ...prev, reminderEnabled: false } : null));
+                    }}
+                    className="w-full py-2.5 text-slate-500 text-sm font-medium border border-slate-200 rounded-xl"
+                  >
+                    关闭到点弹窗提醒
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateTask(selectedTask.id, { reminderEnabled: true });
+                      refreshTasks();
+                      setSelectedTask((prev) => (prev ? { ...prev, reminderEnabled: undefined } : null));
+                    }}
+                    className="w-full py-2.5 text-blue-600 text-sm font-medium border border-blue-200 rounded-xl"
+                  >
+                    开启到点弹窗提醒
                   </button>
                 )}
                 <button

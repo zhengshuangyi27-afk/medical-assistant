@@ -168,6 +168,10 @@ export default function Home() {
                       {task.title}
                     </p>
                     <p className="text-sm text-slate-400 mt-1">{task.time} - {task.location}</p>
+                    {task.reminderEnabled !== false &&
+                      (task.status === 'pending' || task.status === 'in-progress') && (
+                        <p className="text-[11px] text-amber-600/90 mt-0.5">到点提醒 {task.reminderHHmm}</p>
+                      )}
                   </div>
                 </div>
                 <span className={cn("px-2.5 py-1 text-xs font-bold rounded-full uppercase tracking-wider shrink-0", getStatusBadgeStyles(task.status))}>

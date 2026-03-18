@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { randomBytes, scryptSync, timingSafeEqual, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import { hashPassword } from './auth-password.js';
 
 const dataDir = path.join(process.cwd(), 'server', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
@@ -26,30 +27,27 @@ CREATE TABLE IF NOT EXISTS sms_codes (
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 `);
 
-const userCols = db.prepare('PRAGMA table_info(users)').all() as { name: string }[];
-if (!userCols.some((c) => c.name === 'avatar_url')) {
-  db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT');
+function userColNames(): Set<string> {
+  return new Set((db.prepare('PRAGMA table_info(users)').all() as { name: string }[]).map((c) => c.name));
 }
 
-function hashPassword(password: string): string {
-  const salt = randomBytes(16);
-  const hash = scryptSync(password, salt, 64);
-  return salt.toString('hex') + ':' + hash.toString('hex');
-}
-
-export function verifyPassword(password: string, stored: string): boolean {
-  const parts = stored.split(':');
-  if (parts.length !== 2) return false;
-  const [sh, hh] = parts;
-  try {
-    const salt = Buffer.from(sh, 'hex');
-    const hash = scryptSync(password, salt, 64);
-    const expected = Buffer.from(hh, 'hex');
-    return hash.length === expected.length && timingSafeEqual(hash, expected);
-  } catch {
-    return false;
+function migrateUsersTable(): void {
+  let cols = userColNames();
+  if (!cols.has('avatar_url')) {
+    db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT');
+    cols = userColNames();
+  }
+  if (!cols.has('updated_at')) {
+    db.exec('ALTER TABLE users ADD COLUMN updated_at INTEGER');
+    db.prepare('UPDATE users SET updated_at = created_at WHERE updated_at IS NULL').run();
+    cols = userColNames();
+  }
+  if (!cols.has('last_login_at')) {
+    db.exec('ALTER TABLE users ADD COLUMN last_login_at INTEGER');
   }
 }
+
+migrateUsersTable();
 
 export type UserRow = {
   id: string;
@@ -58,6 +56,8 @@ export type UserRow = {
   nickname: string | null;
   created_at: number;
   avatar_url?: string | null;
+  updated_at?: number | null;
+  last_login_at?: number | null;
 };
 
 export function findUserByPhone(phone: string): UserRow | undefined {
@@ -69,28 +69,25 @@ export function createUser(phone: string, password: string, nickname?: string): 
   const now = Date.now();
   const nh = hashPassword(password);
   const nick = nickname?.trim() || `用户${phone.slice(-4)}`;
-  db.prepare('INSERT INTO users (id, phone, password_hash, nickname, created_at) VALUES (?,?,?,?,?)').run(
-    id,
-    phone,
-    nh,
-    nick,
-    now
-  );
-  return { id, phone, password_hash: nh, nickname: nick, created_at: now, avatar_url: null };
+  db.prepare(
+    'INSERT INTO users (id, phone, password_hash, nickname, created_at, updated_at) VALUES (?,?,?,?,?,?)'
+  ).run(id, phone, nh, nick, now, now);
+  return { id, phone, password_hash: nh, nickname: nick, created_at: now, avatar_url: null, updated_at: now, last_login_at: null };
 }
 
-/** 验证码登录时自动注册（无密码） */
 export function createUserSmsOnly(phone: string): UserRow {
   const id = randomUUID();
   const now = Date.now();
   const nick = `用户${phone.slice(-4)}`;
-  db.prepare('INSERT INTO users (id, phone, password_hash, nickname, created_at) VALUES (?,?,NULL,?,?)').run(
-    id,
-    phone,
-    nick,
-    now
-  );
-  return { id, phone, password_hash: null, nickname: nick, created_at: now, avatar_url: null };
+  db.prepare(
+    'INSERT INTO users (id, phone, password_hash, nickname, created_at, updated_at) VALUES (?,?,NULL,?,?,?)'
+  ).run(id, phone, nick, now, now);
+  return { id, phone, password_hash: null, nickname: nick, created_at: now, avatar_url: null, updated_at: now, last_login_at: null };
+}
+
+export function recordLogin(phone: string): void {
+  const now = Date.now();
+  db.prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE phone = ?').run(now, now, phone);
 }
 
 export function setSmsCode(phone: string, code: string, ttlMs: number): void {
@@ -117,13 +114,16 @@ export function getLastSmsSentAt(phone: string): number | null {
 }
 
 export function updateNickname(phone: string, nickname: string): void {
-  db.prepare('UPDATE users SET nickname = ? WHERE phone = ?').run(nickname, phone);
+  const now = Date.now();
+  db.prepare('UPDATE users SET nickname = ?, updated_at = ? WHERE phone = ?').run(nickname, now, phone);
 }
 
 export function setUserPassword(phone: string, password: string): void {
-  db.prepare('UPDATE users SET password_hash = ? WHERE phone = ?').run(hashPassword(password), phone);
+  const now = Date.now();
+  db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE phone = ?').run(hashPassword(password), now, phone);
 }
 
 export function updateAvatarUrl(phone: string, url: string): void {
-  db.prepare('UPDATE users SET avatar_url = ? WHERE phone = ?').run(url, phone);
+  const now = Date.now();
+  db.prepare('UPDATE users SET avatar_url = ?, updated_at = ? WHERE phone = ?').run(url, now, phone);
 }

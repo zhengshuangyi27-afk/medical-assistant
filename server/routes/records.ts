@@ -56,33 +56,54 @@ router.post('/generate', async (req, res) => {
 
 router.post('/save', async (req, res) => {
   try {
-    const { chiefComplaint, assessment, plan, rawInput, patientName, userId } = req.body;
+    const {
+      chiefComplaint,
+      assessment,
+      plan,
+      rawInput,
+      patientName,
+      patientGender,
+      patientAge,
+      department,
+      userId,
+    } = req.body as Record<string, unknown>;
     if (!chiefComplaint && !assessment && !plan) {
       return res.status(400).json({ error: 'At least one of chiefComplaint, assessment, plan is required.' });
     }
     const id = await createRecord({
-      user_id: userId ?? null,
-      patient_name: patientName ?? null,
-      chief_complaint: chiefComplaint ?? '',
-      assessment: assessment ?? '',
-      plan: plan ?? '',
-      raw_input: rawInput ?? null,
+      user_id: (userId as string) ?? null,
+      patient_name: (patientName as string) ?? null,
+      patient_gender: (patientGender as string) ?? null,
+      patient_age: (patientAge as string) ?? null,
+      department: (department as string) ?? null,
+      chief_complaint: (chiefComplaint as string) ?? '',
+      assessment: (assessment as string) ?? '',
+      plan: (plan as string) ?? '',
+      raw_input: (rawInput as string) ?? null,
     });
     return res.json({ id, ok: true });
   } catch (e) {
     console.error('Records save error:', e);
-    return res.status(500).json({ error: e instanceof Error ? e.message : 'Save failed' });
+    const msg = e instanceof Error ? e.message : 'Save failed';
+    return res.status(500).json({
+      error: msg,
+      hint: msg.includes('column') || msg.includes('relation') ? '请执行 supabase/schema.sql 中的迁移段' : undefined,
+    });
   }
 });
 
 router.get('/', async (req, res) => {
   try {
     const userId = (req.query.userId as string) || null;
-    const list = await listRecords(userId);
-    return res.json({ records: list });
+    const records = await listRecords(userId);
+    return res.json({ records });
   } catch (e) {
     console.error('Records list error:', e);
-    return res.status(500).json({ error: e instanceof Error ? e.message : 'List failed' });
+    const msg = e instanceof Error ? e.message : 'List failed';
+    return res.status(500).json({
+      error: msg,
+      hint: msg.includes('relation') || msg.includes('does not exist') ? '请在 Supabase 执行 supabase/schema.sql' : undefined,
+    });
   }
 });
 

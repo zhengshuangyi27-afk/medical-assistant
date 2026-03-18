@@ -2,15 +2,16 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import { verifyPassword } from '../lib/auth-password.js';
 import {
   findUserByPhone,
   createUser,
-  verifyPassword,
-  updateNickname,
   setUserPassword,
+  updateNickname,
   updateAvatarUrl,
+  recordLogin,
   type UserRow,
-} from '../lib/auth-db.js';
+} from '../lib/auth-store.js';
 import { signToken, verifyToken } from '../lib/auth-token.js';
 
 const router = Router();
@@ -38,7 +39,7 @@ function userPayload(u: UserRow) {
   };
 }
 
-router.post('/register', (req: Request, res: Response) => {
+router.post('/register', async (req: Request, res: Response) => {
   try {
     const phone = String(req.body?.phone || '').trim();
     const password = String(req.body?.password || '');
@@ -50,40 +51,46 @@ router.post('/register', (req: Request, res: Response) => {
     if (password.length < 6 || password.length > 32) {
       return res.status(400).json({ error: '密码长度为 6～32 位' });
     }
-    const existing = findUserByPhone(phone);
+    const existing = await findUserByPhone(phone);
     if (existing?.password_hash) {
       return res.status(400).json({ error: '该手机号已注册，请直接登录' });
     }
     let user: UserRow;
     if (existing && !existing.password_hash) {
-      setUserPassword(phone, password);
-      if (nickname) updateNickname(phone, nickname);
-      user = findUserByPhone(phone)!;
+      await setUserPassword(phone, password);
+      if (nickname) await updateNickname(phone, nickname);
+      user = (await findUserByPhone(phone))!;
     } else {
-      user = createUser(phone, password, nickname);
+      user = await createUser(phone, password, nickname);
     }
+    await recordLogin(phone);
     const token = signToken(user.id, user.phone);
     return res.json({ token, user: userPayload(user) });
   } catch (e) {
+    const msg = e instanceof Error ? e.message : '注册失败';
+    if (msg.includes('duplicate') || msg.includes('unique') || msg.includes('23505')) {
+      return res.status(400).json({ error: '该手机号已注册，请直接登录' });
+    }
     console.error('register', e);
     return res.status(500).json({ error: '注册失败' });
   }
 });
 
-router.post('/login', (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
   try {
     const phone = String(req.body?.phone || '').trim();
     const password = String(req.body?.password || '');
     if (!PHONE_RE.test(phone)) {
       return res.status(400).json({ error: '手机号格式不正确' });
     }
-    const user = findUserByPhone(phone);
+    const user = await findUserByPhone(phone);
     if (!user?.password_hash) {
       return res.status(400).json({ error: '账号不存在或未设置密码，请先注册' });
     }
     if (!verifyPassword(password, user.password_hash)) {
       return res.status(400).json({ error: '手机号或密码错误' });
     }
+    await recordLogin(phone);
     const token = signToken(user.id, user.phone);
     return res.json({ token, user: userPayload(user) });
   } catch (e) {
@@ -92,18 +99,23 @@ router.post('/login', (req: Request, res: Response) => {
   }
 });
 
-router.get('/me', (req: Request, res: Response) => {
+router.get('/me', async (req: Request, res: Response) => {
   const auth = req.headers.authorization;
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : '';
   const payload = verifyToken(token);
   if (!payload) {
     return res.status(401).json({ error: '未登录或登录已过期' });
   }
-  const user = findUserByPhone(payload.phone);
-  if (!user) {
-    return res.status(401).json({ error: '用户不存在' });
+  try {
+    const user = await findUserByPhone(payload.phone);
+    if (!user) {
+      return res.status(401).json({ error: '用户不存在' });
+    }
+    return res.json({ user: userPayload(user) });
+  } catch (e) {
+    console.error('me', e);
+    return res.status(500).json({ error: '加载失败' });
   }
-  return res.json({ user: userPayload(user) });
 });
 
 function avatarUploadMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -120,7 +132,7 @@ function avatarUploadMiddleware(req: Request, res: Response, next: NextFunction)
   });
 }
 
-router.post('/avatar', avatarUploadMiddleware, (req: Request, res: Response) => {
+router.post('/avatar', avatarUploadMiddleware, async (req: Request, res: Response) => {
   try {
     const auth = req.headers.authorization;
     const token = auth?.startsWith('Bearer ') ? auth.slice(7) : '';
@@ -128,7 +140,7 @@ router.post('/avatar', avatarUploadMiddleware, (req: Request, res: Response) => 
     if (!payload) {
       return res.status(401).json({ error: '未登录' });
     }
-    const user = findUserByPhone(payload.phone);
+    const user = await findUserByPhone(payload.phone);
     if (!user) {
       return res.status(401).json({ error: '用户不存在' });
     }
@@ -158,7 +170,7 @@ router.post('/avatar', avatarUploadMiddleware, (req: Request, res: Response) => 
     const filename = `${user.id}${ext}`;
     fs.writeFileSync(path.join(AVATAR_DIR, filename), req.file.buffer);
     const publicPath = `/uploads/avatars/${filename}`;
-    updateAvatarUrl(user.phone, publicPath);
+    await updateAvatarUrl(user.phone, publicPath);
     return res.json({ ok: true, avatarUrl: publicPath });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '上传失败';
@@ -170,7 +182,7 @@ router.post('/avatar', avatarUploadMiddleware, (req: Request, res: Response) => 
   }
 });
 
-router.patch('/profile', (req: Request, res: Response) => {
+router.patch('/profile', async (req: Request, res: Response) => {
   const auth = req.headers.authorization;
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : '';
   const payload = verifyToken(token);
@@ -182,7 +194,7 @@ router.patch('/profile', (req: Request, res: Response) => {
     return res.status(400).json({ error: '昵称为 1～32 字' });
   }
   try {
-    updateNickname(payload.phone, nickname);
+    await updateNickname(payload.phone, nickname);
     return res.json({ ok: true, nickname });
   } catch (e) {
     console.error('profile patch', e);

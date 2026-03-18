@@ -15,6 +15,7 @@ import Calculator from './pages/Calculator';
 import Tasks from './pages/Tasks';
 import { migrateToDashScopeDefault } from './lib/llm';
 import RequireAuth from './components/RequireAuth';
+import TaskReminder from './components/TaskReminder';
 
 export default function App() {
   useEffect(() => {
@@ -91,6 +92,7 @@ export default function App() {
             }
           />
         </Routes>
+        <TaskReminder />
       </div>
     </BrowserRouter>
   );
