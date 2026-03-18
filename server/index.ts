@@ -21,12 +21,15 @@ if (proxyUrl) {
 }
 
 import express from 'express';
+import path from 'path';
+import fs from 'fs';
 import cors from 'cors';
 import { llmRouter } from './routes/llm.js';
 import { recordsRouter } from './routes/records.js';
 import { configRouter } from './routes/config.js';
 import { voiceRouter } from './routes/voice.js';
 import { reportRouter } from './routes/report.js';
+import { authRouter } from './routes/auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,14 +38,23 @@ app.use(cors({ origin: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+const uploadsRoot = path.join(process.cwd(), 'server', 'data', 'uploads');
+fs.mkdirSync(path.join(uploadsRoot, 'avatars'), { recursive: true });
+app.use('/uploads', express.static(uploadsRoot));
+
 app.use('/api/llm', llmRouter);
 app.use('/api/records', recordsRouter);
 app.use('/api/config', configRouter);
 app.use('/api/voice', voiceRouter);
 app.use('/api/report', reportRouter);
+app.use('/api/auth', authRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: new Date().toISOString() });
+});
+
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API 路径不存在，请确认后端已更新并包含 /api/auth 等路由' });
 });
 
 app.listen(PORT, () => {

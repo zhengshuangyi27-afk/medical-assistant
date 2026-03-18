@@ -99,7 +99,8 @@ Page({
     }
     this.setData({ isGenerating: true });
     try {
-      const selectedLlm = getApp().globalData.selectedLlm || wx.getStorageSync('selected_llm') || '';
+      const llmUtil = require('../../utils/llm.js');
+      const selectedLlm = llmUtil.getModelIdForModule('records');
       const record = await api.post('/api/records/generate', {
         text: inputText.trim(),
         modelId: selectedLlm || undefined,

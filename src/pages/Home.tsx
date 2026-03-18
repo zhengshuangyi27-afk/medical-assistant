@@ -3,8 +3,9 @@ import BottomNav from '@/src/components/ui/BottomNav';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
-import { getSelectedModelId } from '@/src/lib/llm';
-import { apiGet } from '@/src/lib/api';
+import { getSelectedModelId, getModelIdForModule, LLM_MODULES } from '@/src/lib/llm';
+import { apiGet, publicAssetUrl } from '@/src/lib/api';
+import { getCachedUser } from '@/src/lib/auth';
 import type { Task, TaskStatus } from '@/src/lib/tasks';
 import { getTasks, updateTask } from '@/src/lib/tasks';
 
@@ -12,16 +13,29 @@ import { getTasks, updateTask } from '@/src/lib/tasks';
 const PROFILE_AVATAR_URL = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbBfro0m89yk4rm-wyVevUSsEpExKZKWXqYjpMpH_R0ZxG1lHO1aX2l0XYLufxC1FXphv8vBL2wFzdX135gXIq3YJnXUbp1YFreLWYwJOb-boCUuGTBhM4bvaw-FppB2oymZBoU-VgO4p8P3Dlshr8IERUW-PSihMDSW7P9ydRyeKxfO2hOU9u51wrKq64JwtfnD_D7R03AAA7ljdtdTTWwLqb9jbXL6pELfp73ndNNp5hevXcfVMsK3yOfcY5rDZJbBFF77Ts-HY';
 
 export default function Home() {
+  const user = getCachedUser();
+  const headerAvatarSrc = user?.avatarUrl
+    ? `${publicAssetUrl(user.avatarUrl)}?v=${user.avatarRev ?? 0}`
+    : PROFILE_AVATAR_URL;
+
   const [currentModelName, setCurrentModelName] = useState<string>('');
 
   useEffect(() => {
-    const id = getSelectedModelId();
+    const globalId = getSelectedModelId();
+    const ids = LLM_MODULES.map((m) => getModelIdForModule(m.key));
+    const uniq = new Set([globalId, ...ids]);
     apiGet<{ models: { id: string; name: string }[] }>('/api/config/llm')
       .then((data) => {
-        const name = data.models?.find((m) => m.id === id)?.name ?? id;
-        setCurrentModelName(name);
+        const n = (x: string) => data.models?.find((m) => m.id === x)?.name ?? x;
+        if (uniq.size <= 1) {
+          setCurrentModelName(n(globalId));
+        } else {
+          setCurrentModelName(`已按功能分别配置（${uniq.size} 个模型）`);
+        }
       })
-      .catch(() => setCurrentModelName(id || '—'));
+      .catch(() => {
+        setCurrentModelName(uniq.size <= 1 ? globalId || '—' : '已按功能分别配置');
+      });
   }, []);
 
   const [tasks, setTasksState] = useState<Task[]>(() => getTasks());
@@ -81,15 +95,15 @@ export default function Home() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Zap className="h-5 w-5 text-white fill-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-blue-900">多模态就医助手</span>
+            <span className="font-bold text-xl tracking-tight text-blue-900">多模态医生助手</span>
           </div>
 
           <div className="flex items-center">
-            <Link to="/profile" className="block rounded-full border border-slate-200 overflow-hidden">
+            <Link to="/profile" className="block rounded-full border border-slate-200 overflow-hidden bg-slate-100">
               <img
                 alt="用户头像"
                 className="w-8 h-8 rounded-full object-cover"
-                src={PROFILE_AVATAR_URL}
+                src={headerAvatarSrc}
               />
             </Link>
           </div>

@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
 import { getLocalDrafts } from '@/src/lib/local-drafts';
+import { loadHospitalConfig, hasHisConfigured } from '@/src/lib/hospital-config';
+import BottomNav from '@/src/components/ui/BottomNav';
 
 interface MedicalRecord {
   chiefComplaint: string;
@@ -87,10 +89,10 @@ export default function Records() {
     setIsGenerating(true);
     try {
       const { apiPost } = await import('@/src/lib/api');
-      const { getSelectedModelId } = await import('@/src/lib/llm');
+      const { getModelIdForModule } = await import('@/src/lib/llm');
       const data = await apiPost<MedicalRecord>('/api/records/generate', {
         text: inputText.trim(),
-        modelId: getSelectedModelId(),
+        modelId: getModelIdForModule('records'),
       });
       setRecord(data);
       setIsEditing(false);
@@ -127,7 +129,7 @@ export default function Records() {
         </div>
       </nav>
 
-      <main className="flex-1 overflow-y-auto p-4 space-y-6 pb-10 no-scrollbar">
+      <main className="flex-1 overflow-y-auto p-4 space-y-6 pb-28 no-scrollbar">
         {/* PatientSelectionSection */}
         <section className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-4">
@@ -157,7 +159,7 @@ export default function Records() {
 
         {/* 选择患者弹窗 */}
         {patientModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setPatientModalOpen(false)}>
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setPatientModalOpen(false)}>
             <div className="bg-white w-full max-w-md rounded-t-2xl shadow-xl max-h-[70vh] overflow-hidden animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
               <div className="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="font-bold text-slate-800 text-lg">选择患者</h3>
@@ -360,7 +362,13 @@ export default function Records() {
                 保存至本地
               </button>
               <button 
-                onClick={() => showToast('HIS 接口未配置')}
+                onClick={() =>
+                  showToast(
+                    hasHisConfigured(loadHospitalConfig())
+                      ? 'HIS 已配置，同步将在接口对接完成后开放'
+                      : '请先在「我的 → 医院系统配置」中配置 HIS API'
+                  )
+                }
                 className="py-2.5 px-4 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 shadow-sm shadow-green-100 transition-colors active:scale-95 flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -370,6 +378,8 @@ export default function Records() {
           </section>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 }

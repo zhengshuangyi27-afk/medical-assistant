@@ -1,7 +1,16 @@
-.row { display: flex; align-items: center; padding: 24rpx 0; }
-.row-title { flex: 1; font-weight: 600; }
-.row-value { color: #0055BB; font-size: 26rpx; margin-right: 16rpx; }
-.arrow { color: #999; }
+.container { padding: 24rpx 24rpx 140rpx; }
+.section-title { font-size: 24rpx; color: #94a3b8; font-weight: 600; padding: 16rpx 8rpx 12rpx; }
+.card { background: #fff; border-radius: 24rpx; padding: 8rpx 28rpx; margin-bottom: 24rpx; border: 1rpx solid #f1f5f9; }
+.row { display: flex; align-items: center; padding: 28rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.row:last-child { border-bottom: none; }
+.row-sub { padding: 24rpx 0; }
+.row-main { flex: 1; min-width: 0; }
+.row-title { display: block; font-weight: 600; font-size: 30rpx; }
+.row-desc { display: block; font-size: 22rpx; color: #94a3b8; margin-top: 8rpx; }
+.row-value { display: block; color: #0055BB; font-size: 26rpx; margin-top: 8rpx; }
+.row-title-sm { display: block; font-size: 28rpx; font-weight: 600; color: #333; }
+.row-value-sm { display: block; font-size: 24rpx; color: #64748b; margin-top: 6rpx; }
+.arrow { color: #999; font-size: 36rpx; margin-left: 16rpx; flex-shrink: 0; }
 .hint { font-size: 24rpx; color: #999; }
 
 .bottom-nav {
@@ -25,6 +34,8 @@
   padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
 }
 .modal-title { font-weight: bold; margin-bottom: 24rpx; }
+.modal-scroll { max-height: 55vh; }
+.modal-follow { background: #fef3c7 !important; border: 2rpx solid #f59e0b !important; }
 .modal-item {
   padding: 28rpx;
   margin-bottom: 16rpx;

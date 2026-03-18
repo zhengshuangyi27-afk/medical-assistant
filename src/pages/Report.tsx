@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { cn } from '@/src/lib/utils';
 import BottomNav from '@/src/components/ui/BottomNav';
 import { apiPostFormData } from '@/src/lib/api';
-import { getSelectedModelId } from '@/src/lib/llm';
+import { getModelIdForModule } from '@/src/lib/llm';
 
 interface ReportItem {
   name: string;
@@ -52,7 +52,7 @@ export default function Report() {
     try {
       const form = new FormData();
       form.append('image', file);
-      form.append('modelId', getSelectedModelId());
+      form.append('modelId', getModelIdForModule('report'));
       const data = await apiPostFormData<{ result: string; parsed: ReportParsed | null }>('/api/report/parse', form);
       setRawResult(data.result || null);
       setParsed(data.parsed || null);

@@ -188,10 +188,10 @@ export default function Search() {
     setNumberedSections([]);
     setExpandedCards(new Set());
     try {
-      const { getSelectedModelId } = await import('@/src/lib/llm');
+      const { getModelIdForModule } = await import('@/src/lib/llm');
       const data = await apiPost<{ result: string; blocked?: boolean; message?: string }>('/api/llm/query', {
         query: searchQuery,
-        modelId: getSelectedModelId(),
+        modelId: getModelIdForModule('drug'),
       });
       if (data.blocked) {
         setResult(null);

@@ -1,4 +1,5 @@
 const app = getApp();
+const llmUtil = require('./llm.js');
 
 function apiBase() {
   return app.globalData.apiBase || 'http://localhost:3001';
@@ -65,7 +66,7 @@ function uploadVoice(filePath) {
 // 报告助手：上传报告图片，后端解析并返回固定格式
 function uploadReportImage(filePath) {
   const base = apiBase();
-  const modelId = app.globalData.selectedLlm || wx.getStorageSync('selected_llm') || '';
+  const modelId = llmUtil.getModelIdForModule('report') || '';
   return new Promise((resolve, reject) => {
     wx.uploadFile({
       url: base + '/api/report/parse',

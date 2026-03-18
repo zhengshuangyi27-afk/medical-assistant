@@ -1,4 +1,5 @@
 const api = require('../../utils/api.js');
+const llmUtil = require('../../utils/llm.js');
 
 Page({
   data: {
@@ -20,8 +21,8 @@ Page({
     }
     this.setData({ loading: true, blockedMsg: '', result: '' });
     try {
-      const selectedLlm = getApp().globalData.selectedLlm || wx.getStorageSync('selected_llm') || '';
-      const data = await api.post('/api/llm/query', { query, modelId: selectedLlm || undefined });
+      const modelId = llmUtil.getModelIdForModule('drug') || undefined;
+      const data = await api.post('/api/llm/query', { query, modelId });
       if (data.blocked) {
         this.setData({
           loading: false,
