@@ -14,6 +14,15 @@ type UserTask = {
   reminderEnabled?: boolean;
 };
 
+type ReportHistoryItem = {
+  id: string;
+  reportType: string;
+  createdAt: string;
+  parsed: unknown | null;
+  rawResult: string | null;
+};
+const MAX_REPORT_HISTORY = 3;
+
 const router = Router();
 
 function resolveUserId(req: Request): string {
@@ -140,6 +149,55 @@ router.post('/user/tasks', async (req, res) => {
   } catch (e) {
     console.error('Save user tasks error:', e);
     return res.status(500).json({ error: 'Failed to save tasks' });
+  }
+});
+
+function normalizeReportHistoryItem(raw: Record<string, unknown>): ReportHistoryItem {
+  return {
+    id: String(raw.id || ''),
+    reportType: String(raw.reportType || '未命名报告'),
+    createdAt: String(raw.createdAt || new Date().toISOString()),
+    parsed: raw.parsed ?? null,
+    rawResult: raw.rawResult == null ? null : String(raw.rawResult),
+  };
+}
+
+router.get('/user/report-history', async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    const raw = await getSetting(userId, 'report_history');
+    if (!raw) return res.json({ items: [] });
+    let items: ReportHistoryItem[] = [];
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        items = parsed.map((x) => normalizeReportHistoryItem((x ?? {}) as Record<string, unknown>));
+      }
+    } catch {
+      items = [];
+    }
+    return res.json({ items });
+  } catch (e) {
+    console.error('Get report history error:', e);
+    return res.status(500).json({ error: 'Failed to get report history' });
+  }
+});
+
+router.post('/user/report-history', async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    const body = req.body as { items?: unknown };
+    if (!Array.isArray(body.items)) {
+      return res.status(400).json({ error: 'items must be an array' });
+    }
+    const items = body.items
+      .map((x) => normalizeReportHistoryItem((x ?? {}) as Record<string, unknown>))
+      .slice(0, MAX_REPORT_HISTORY);
+    await setSetting(userId, 'report_history', JSON.stringify(items));
+    return res.json({ ok: true, count: items.length });
+  } catch (e) {
+    console.error('Save report history error:', e);
+    return res.status(500).json({ error: 'Failed to save report history' });
   }
 });
 

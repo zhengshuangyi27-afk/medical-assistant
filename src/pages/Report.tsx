@@ -1,9 +1,9 @@
 import { ChevronLeft, Camera, Upload, Loader2, AlertTriangle, FileText, Stethoscope, Apple } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/src/lib/utils';
 import BottomNav from '@/src/components/ui/BottomNav';
-import { apiPostFormData } from '@/src/lib/api';
+import { apiGet, apiPost, apiPostFormData } from '@/src/lib/api';
 import { getModelIdForModule } from '@/src/lib/llm';
 
 interface ReportItem {
@@ -29,6 +29,17 @@ interface ReportParsed {
   lifestyleAndDietAdvice?: string[];
 }
 
+interface ReportHistoryItem {
+  id: string;
+  reportType: string;
+  createdAt: string;
+  parsed: ReportParsed | null;
+  rawResult: string | null;
+}
+
+const HISTORY_KEY = 'medical_report_history_cache';
+const MAX_HISTORY = 3;
+
 export default function Report() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +48,67 @@ export default function Report() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [parsed, setParsed] = useState<ReportParsed | null>(null);
   const [rawResult, setRawResult] = useState<string | null>(null);
+  const [history, setHistory] = useState<ReportHistoryItem[]>([]);
+
+  const loadLocalHistory = (): ReportHistoryItem[] => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw) as unknown;
+      if (!Array.isArray(arr)) return [];
+      return arr as ReportHistoryItem[];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveLocalHistory = (items: ReportHistoryItem[]) => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, MAX_HISTORY)));
+  };
+
+  useEffect(() => {
+    const local = loadLocalHistory();
+    if (local.length) setHistory(local.slice(0, MAX_HISTORY));
+    void apiGet<{ items?: ReportHistoryItem[] }>('/api/config/user/report-history')
+      .then((res) => {
+        if (!Array.isArray(res.items)) return;
+        const trimmed = res.items.slice(0, MAX_HISTORY);
+        setHistory(trimmed);
+        saveLocalHistory(trimmed);
+      })
+      .catch(() => {
+        // 离线或未登录时继续使用本地缓存
+      });
+  }, []);
+
+  const applyHistory = (item: ReportHistoryItem) => {
+    setError('');
+    setPreviewUrl(null);
+    setParsed(item.parsed || null);
+    setRawResult(item.rawResult || null);
+  };
+
+  const persistHistory = (items: ReportHistoryItem[]) => {
+    saveLocalHistory(items);
+    void apiPost('/api/config/user/report-history', { items }).catch(() => {
+      // 网络失败时本地缓存仍可快速打开
+    });
+  };
+
+  const appendHistory = (nextParsed: ReportParsed | null, nextRaw: string | null) => {
+    const item: ReportHistoryItem = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `rh-${Date.now()}`,
+      reportType: (nextParsed?.reportType || '未命名报告').trim() || '未命名报告',
+      createdAt: new Date().toISOString(),
+      parsed: nextParsed,
+      rawResult: nextRaw,
+    };
+    setHistory((prev) => {
+      const next = [item, ...prev].slice(0, MAX_HISTORY);
+      persistHistory(next);
+      return next;
+    });
+  };
 
   const handleFile = async (file: File) => {
     if (!/^image\/(jpeg|png|gif|webp)$/i.test(file.type)) {
@@ -54,8 +126,11 @@ export default function Report() {
       form.append('image', file);
       form.append('modelId', getModelIdForModule('report'));
       const data = await apiPostFormData<{ result: string; parsed: ReportParsed | null }>('/api/report/parse', form);
-      setRawResult(data.result || null);
-      setParsed(data.parsed || null);
+      const nextRaw = data.result || null;
+      const nextParsed = data.parsed || null;
+      setRawResult(nextRaw);
+      setParsed(nextParsed);
+      appendHistory(nextParsed, nextRaw);
     } catch (e) {
       const msg = e instanceof Error ? e.message : '解析失败，请重试';
       setError(msg.includes('Not Found') || msg.includes('404') ? '接口未找到，请确认后端已启动（npm run server）并已包含报告路由' : msg);
@@ -83,6 +158,31 @@ export default function Report() {
       </nav>
 
       <main className="flex-1 overflow-y-auto p-4 pb-24 no-scrollbar space-y-4">
+        {/* 历史记录（按报告类型名称展示） */}
+        {history.length > 0 && (
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-slate-800">历史记录</h2>
+              <span className="text-xs text-slate-500">按报告类型展示</span>
+            </div>
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {history.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => applyHistory(item)}
+                  className="w-full text-left px-3 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50"
+                >
+                  <p className="text-sm font-semibold text-slate-800 truncate">{item.reportType}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {new Date(item.createdAt).toLocaleString('zh-CN', { hour12: false })}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* 上传区域：拍照 + 上传照片 */}
         <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <p className="text-sm text-slate-600 mb-3">上传报告图片，AI 将解析并标注异常指标</p>
