@@ -8,6 +8,7 @@ import {
   getCurrentHHmm,
   isTaskDueForReminder,
   markReminderFired,
+  hydrateTasksFromServer,
   type Task,
 } from '@/src/lib/tasks';
 
@@ -43,6 +44,7 @@ export default function TaskReminder() {
   }, [tryShowNext]);
 
   useEffect(() => {
+    void hydrateTasksFromServer();
     tryShowNext();
     const id = setInterval(tryShowNext, POLL_MS);
     const onVis = () => {

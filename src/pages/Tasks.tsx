@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/src/lib/utils';
 import BottomNav from '@/src/components/ui/BottomNav';
 import type { Task, TaskStatus } from '@/src/lib/tasks';
-import { getTasks, addTask, updateTask, deleteTask } from '@/src/lib/tasks';
+import { getTasks, addTask, updateTask, deleteTask, hydrateTasksFromServer } from '@/src/lib/tasks';
 
 function getIconStyles(status: TaskStatus) {
   switch (status) {
@@ -61,6 +61,10 @@ export default function Tasks() {
   const [newReminderOn, setNewReminderOn] = useState(true);
 
   const refreshTasks = () => setTasksState(getTasks());
+
+  useEffect(() => {
+    void hydrateTasksFromServer().then((list) => setTasksState(list));
+  }, []);
 
   const handleUpdateStatus = (id: string, newStatus: TaskStatus) => {
     updateTask(id, { status: newStatus });

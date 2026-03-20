@@ -1,3 +1,5 @@
+import { apiGet, apiPost } from './api';
+import { getAuthToken } from './auth';
 export type TaskStatus = 'in-progress' | 'pending' | 'completed' | 'cancelled';
 
 export interface Task {
@@ -71,6 +73,13 @@ function saveTasks(tasks: Task[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
+function persistTasksToServer(tasks: Task[]): void {
+  if (!getAuthToken()) return;
+  void apiPost('/api/config/user/tasks', { tasks }).catch((e) => {
+    console.warn('Save tasks to server failed:', e);
+  });
+}
+
 export function getTodayDateKey(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -118,7 +127,22 @@ export function getTasks(): Task[] {
 
 export function setTasks(tasks: Task[]): Task[] {
   saveTasks(tasks);
+  persistTasksToServer(tasks);
   return tasks;
+}
+
+export async function hydrateTasksFromServer(): Promise<Task[]> {
+  if (!getAuthToken()) return loadTasks();
+  try {
+    const data = await apiGet<{ tasks?: unknown[] | null }>('/api/config/user/tasks');
+    // 未配置过（tasks=null）时，回退到本地默认任务
+    if (!Array.isArray(data.tasks) || data.tasks.length === 0) return loadTasks();
+    const tasks = data.tasks.map((x) => normalizeTask((x ?? {}) as Record<string, unknown>));
+    saveTasks(tasks);
+    return tasks;
+  } catch {
+    return loadTasks();
+  }
 }
 
 export type NewTaskInput = Omit<Task, 'id' | 'reminderHHmm'> & { reminderHHmm?: string };
@@ -138,6 +162,7 @@ export function addTask(task: NewTaskInput): Task {
   const list = loadTasks();
   list.unshift(newTask);
   saveTasks(list);
+  persistTasksToServer(list);
   return newTask;
 }
 
@@ -155,12 +180,14 @@ export function updateTask(id: string, patch: Partial<Task>): Task[] {
     return next;
   });
   saveTasks(list);
+  persistTasksToServer(list);
   return list;
 }
 
 export function deleteTask(id: string): Task[] {
   const list = loadTasks().filter((t) => t.id !== id);
   saveTasks(list);
+  persistTasksToServer(list);
   const log = loadReminderLog();
   delete log[id];
   localStorage.setItem(REMINDER_LOG_KEY, JSON.stringify(log));

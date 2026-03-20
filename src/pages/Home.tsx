@@ -6,7 +6,7 @@ import { cn } from '@/src/lib/utils';
 import { getSelectedModelId, getModelIdForModule, LLM_MODULES } from '@/src/lib/llm';
 import { apiGet } from '@/src/lib/api';
 import type { Task, TaskStatus } from '@/src/lib/tasks';
-import { getTasks, updateTask } from '@/src/lib/tasks';
+import { getTasks, updateTask, hydrateTasksFromServer } from '@/src/lib/tasks';
 
 export default function Home() {
   const [currentModelName, setCurrentModelName] = useState<string>('');
@@ -31,6 +31,10 @@ export default function Home() {
 
   const [tasks, setTasksState] = useState<Task[]>(() => getTasks());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    void hydrateTasksFromServer().then((list) => setTasksState(list));
+  }, []);
 
   const handleUpdateStatus = (id: string, newStatus: TaskStatus) => {
     updateTask(id, { status: newStatus });

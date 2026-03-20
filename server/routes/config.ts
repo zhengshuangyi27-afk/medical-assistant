@@ -3,6 +3,17 @@ import { listLlmConfigs } from '../lib/config-db.js';
 import { getSetting, setSetting } from '../lib/settings-db.js';
 import { verifyToken, userSettingsKeyFromPhone } from '../lib/auth-token.js';
 
+type UserTask = {
+  id: string;
+  title: string;
+  time: string;
+  location: string;
+  status: 'in-progress' | 'pending' | 'completed' | 'cancelled';
+  iconType: 'clipboard' | 'clock' | 'check';
+  reminderHHmm: string;
+  reminderEnabled?: boolean;
+};
+
 const router = Router();
 
 function resolveUserId(req: Request): string {
@@ -76,5 +87,60 @@ const putUserSettings = async (req: Request, res: Response) => {
 };
 router.put('/user/settings', putUserSettings);
 router.post('/user/settings', putUserSettings);
+
+function normalizeTask(raw: Record<string, unknown>): UserTask {
+  return {
+    id: String(raw.id || ''),
+    title: String(raw.title || ''),
+    time: String(raw.time || '—'),
+    location: String(raw.location || '—'),
+    status: (['in-progress', 'pending', 'completed', 'cancelled'].includes(String(raw.status))
+      ? String(raw.status)
+      : 'pending') as UserTask['status'],
+    iconType: (['clipboard', 'clock', 'check'].includes(String(raw.iconType))
+      ? String(raw.iconType)
+      : 'clipboard') as UserTask['iconType'],
+    reminderHHmm: /^\d{2}:\d{2}$/.test(String(raw.reminderHHmm || '')) ? String(raw.reminderHHmm) : '09:00',
+    reminderEnabled: raw.reminderEnabled === false ? false : undefined,
+  };
+}
+
+router.get('/user/tasks', async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    const raw = await getSetting(userId, 'today_tasks');
+    // 数据库里尚未为该用户配置过任务时：前端应回退到本地默认任务
+    if (!raw) return res.json({ tasks: null });
+    let tasks: UserTask[] = [];
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        tasks = parsed.map((x) => normalizeTask((x ?? {}) as Record<string, unknown>));
+      }
+    } catch {
+      tasks = [];
+    }
+    return res.json({ tasks });
+  } catch (e) {
+    console.error('Get user tasks error:', e);
+    return res.status(500).json({ error: 'Failed to get tasks' });
+  }
+});
+
+router.post('/user/tasks', async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    const body = req.body as { tasks?: unknown };
+    if (!Array.isArray(body.tasks)) {
+      return res.status(400).json({ error: 'tasks must be an array' });
+    }
+    const tasks = body.tasks.map((x) => normalizeTask((x ?? {}) as Record<string, unknown>));
+    await setSetting(userId, 'today_tasks', JSON.stringify(tasks));
+    return res.json({ ok: true, count: tasks.length });
+  } catch (e) {
+    console.error('Save user tasks error:', e);
+    return res.status(500).json({ error: 'Failed to save tasks' });
+  }
+});
 
 export const configRouter = router;
