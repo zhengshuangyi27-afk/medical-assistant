@@ -82,6 +82,16 @@ export default function Profile() {
   const [hospitalModal, setHospitalModal] = useState<null | 'his' | 'emr' | 'lis'>(null);
   const [hospDraft, setHospDraft] = useState<Record<string, string>>({});
 
+  const mergeAvatarRev = (prev: AuthUser | null, next: AuthUser): number => {
+    const prevRev = prev?.avatarRev ?? 0;
+    // 头像 URL 变化时提升版本；未变化时沿用已有版本，避免登录后回到旧缓存参数导致头像看似“丢失”
+    if (prev?.phone === next.phone && prev?.avatarUrl && next.avatarUrl && prev.avatarUrl !== next.avatarUrl) {
+      return prevRev + 1;
+    }
+    if (prev?.phone === next.phone) return prevRev;
+    return next.avatarUrl ? 1 : 0;
+  };
+
   const openHospitalModal = (kind: 'his' | 'emr' | 'lis') => {
     const c = loadHospitalConfig();
     setHospitalCfg(c);
@@ -185,7 +195,7 @@ export default function Profile() {
     apiGet<{ user: AuthUser }>('/api/auth/me')
       .then((r) => {
         const prev = getCachedUser();
-        const avatarRev = prev?.phone === r.user.phone ? prev.avatarRev ?? 0 : 0;
+        const avatarRev = mergeAvatarRev(prev, r.user);
         const user = { ...r.user, avatarRev };
         setAuthUser(user);
         setAuthSession(t, user);
@@ -203,7 +213,8 @@ export default function Profile() {
   }, [authUser?.id]);
 
   const afterAuthSuccess = (token: string, user: AuthUser) => {
-    const u = { ...user, avatarRev: user.avatarRev ?? 0 };
+    const prev = getCachedUser();
+    const u = { ...user, avatarRev: mergeAvatarRev(prev, user) };
     setAuthSession(token, u);
     setAuthUser(u);
     setAuthErr('');
